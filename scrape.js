@@ -286,7 +286,7 @@ async function main() {
     }
 
     // Save results
-    const dataDir = join(__dirname, "data");
+    const dataDir = join(__dirname, "public", "data");
     if (!existsSync(dataDir)) mkdirSync(dataDir, { recursive: true });
 
     const outputPath = join(dataDir, "promotions.json");
