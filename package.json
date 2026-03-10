@@ -1,12 +1,25 @@
 {
   "name": "grocer-guard-standalone",
-  "version": "1.0.0",
-  "description": "Standalone Delhaize folder scraper using Firecrawl + OpenAI",
+  "version": "1.1.0",
+  "description": "Premium Standalone Grocery Saver Scraper & Web App",
   "type": "module",
   "scripts": {
+    "dev": "vite",
+    "build": "node scrape.js && vite build",
+    "preview": "vite preview",
     "scrape": "node scrape.js"
   },
   "dependencies": {
-    "dotenv": "^16.4.7"
+    "dotenv": "^16.4.7",
+    "react": "^18.3.1",
+    "react-dom": "^18.3.1",
+    "lucide-react": "^0.462.0"
+  },
+  "devDependencies": {
+    "@types/react": "^18.3.3",
+    "@types/react-dom": "^18.3.0",
+    "@vitejs/plugin-react": "^4.3.1",
+    "typescript": "^5.5.3",
+    "vite": "^5.4.1"
   }
 }
