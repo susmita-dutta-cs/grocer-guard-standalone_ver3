@@ -6,17 +6,25 @@ import { fileURLToPath } from "url";
 const __dirname = dirname(fileURLToPath(import.meta.url));
 
 // ─── Config ───────────────────────────────────────────────────────────────────
-const OPENAI_API_KEY = process.env.OPENAI_API_KEY;
+const GROQ_API_KEY = process.env.GROQ_API_KEY;
 const KIMBINO_BASE = "https://www.kimbino.be";
-const DELHAIZE_URL = `${KIMBINO_BASE}/delhaize/`;
+
+const STORES = [
+  { id: "delhaize", name: "Delhaize", path: "/delhaize/" },
+  { id: "aldi", name: "Aldi", path: "/aldi/" },
+  { id: "lidl", name: "Lidl", path: "/lidl/" },
+  { id: "carrefour", name: "Carrefour", path: "/carrefour/" },
+  { id: "colruyt", name: "Colruyt", path: "/colruyt/" },
+  { id: "albert-heijn", name: "Albert Heijn", path: "/albert-heijn/" },
+];
 
 // ─── Extraction Prompt ────────────────────────────────────────────────────────
-const EXTRACTION_PROMPT = `You are a grocery promotion data extractor for Belgian supermarkets. You will receive text content scraped from a Delhaize promotional folder page. Your job is to extract EVERY single product promotion visible.
+const EXTRACTION_PROMPT = `You are a grocery promotion data extractor for Belgian supermarkets. You will receive an image from a promotional folder/flyer. Your job is to extract EVERY single product promotion visible on the page.
 
 CRITICAL INSTRUCTIONS:
-- Look at EVERY product mentioned, even small references
+- Look at EVERY product on the page, even small ones in corners or partially visible
 - Read ALL text: product names, brands, prices, weights, discount labels, validity dates
-- Pay close attention to price tags, discount stickers, "1+1", "2de -50%", etc.
+- Pay close attention to price tags, red/yellow discount stickers, "1+1", "2de -50%", etc.
 - Extract the EXACT brand name as printed (e.g. "Boni Selection", "Everyday", "Danone", "Coca-Cola")
 - Extract the EXACT quantity/weight as printed (e.g. "1,5 kg", "500 g", "6 x 33 cl", "per stuk", "per kg")
 - Extract both the promotional price AND original price when visible
@@ -34,7 +42,8 @@ Return a JSON array of objects with these fields:
 - valid_from: start date if visible in format "YYYY-MM-DD" (null if not visible)
 - valid_until: end date if visible in format "YYYY-MM-DD" (null if not visible)
 
-IMPORTANT: Extract EVERY product mentioned. Only include food/grocery items.
+IMPORTANT: Extract EVERY product. A typical folder page has 4-12 products. If you find fewer than 3, look again carefully.
+Only include food/grocery items. Skip non-food items.
 Return ONLY the JSON array, no other text. If no promotions found, return [].`;
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
@@ -43,28 +52,11 @@ function log(msg) {
   console.log(`[${time}] ${msg}`);
 }
 
-function stripHtml(html) {
-  // Remove script and style tags with their content
-  let text = html.replace(/<script[\s\S]*?<\/script>/gi, "");
-  text = text.replace(/<style[\s\S]*?<\/style>/gi, "");
-  // Replace block-level tags with newlines
-  text = text.replace(/<(br|p|div|h[1-6]|li|tr)[^>]*>/gi, "\n");
-  // Remove all other tags
-  text = text.replace(/<[^>]+>/g, " ");
-  // Decode common HTML entities
-  text = text.replace(/&euro;/g, "€").replace(/&amp;/g, "&").replace(/&lt;/g, "<").replace(/&gt;/g, ">");
-  text = text.replace(/&nbsp;/g, " ").replace(/&#8364;/g, "€").replace(/&#(\d+);/g, (_, n) => String.fromCharCode(n));
-  // Collapse whitespace
-  text = text.replace(/[ \t]+/g, " ");
-  text = text.replace(/\n\s*\n/g, "\n");
-  return text.trim();
-}
-
 async function fetchPage(url) {
   const res = await fetch(url, {
     headers: {
       "User-Agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
-      "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
+      Accept: "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
       "Accept-Language": "nl-BE,nl;q=0.9,en;q=0.8",
     },
   });
@@ -72,30 +64,84 @@ async function fetchPage(url) {
   return await res.text();
 }
 
-async function extractWithOpenAI(content) {
-  const res = await fetch("https://api.openai.com/v1/chat/completions", {
+// Download image and convert to base64
+async function imageToBase64(url) {
+  const res = await fetch(url, {
+    headers: { "User-Agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36" },
+  });
+  if (!res.ok) throw new Error(`HTTP ${res.status} for ${url}`);
+  const buffer = await res.arrayBuffer();
+  return Buffer.from(buffer).toString("base64");
+}
+
+// Extract folder page image URLs from Kimbino HTML
+function extractPageImages(html) {
+  // Regex for Kimbino CDN images
+  const kimbinoRegex = /src="(https:\/\/eu\.kimbicdns\.com\/[^"]+\/(\d+)\.jpg[^"]*)"/g;
+  const images = [];
+  let match;
+  while ((match = kimbinoRegex.exec(html)) !== null) {
+    const pageNum = parseInt(match[2]);
+    images.push({ url: match[1], page: pageNum });
+  }
+
+  // Fallback: Look for any high-res images that might be folder pages
+  if (images.length === 0) {
+    const imgRegex = /src="(https?:\/\/[^"]+\.(jpg|jpeg|png|webp)[^"]*)"/gi;
+    let count = 0;
+    while ((match = imgRegex.exec(html)) !== null) {
+      const url = match[1];
+      if (url.includes("page") || url.includes("folder") || url.includes("flyer") || url.includes("data")) {
+        images.push({ url: url, page: count++ });
+      }
+    }
+  }
+
+  // Deduplicate by URL and sort
+  const seen = new Set();
+  return images
+    .filter((img) => {
+      if (seen.has(img.url)) return false;
+      seen.add(img.url);
+      return true;
+    })
+    .sort((a, b) => a.page - b.page);
+}
+
+// Extract promotions from a single page image using Groq vision
+async function extractFromImage(imageBase64, pageNum, storeName) {
+  const res = await fetch("https://api.groq.com/openai/v1/chat/completions", {
     method: "POST",
     headers: {
-      Authorization: `Bearer ${OPENAI_API_KEY}`,
+      Authorization: `Bearer ${GROQ_API_KEY}`,
       "Content-Type": "application/json",
     },
     body: JSON.stringify({
-      model: "gpt-4o",
+      model: "llama-3.2-11b-vision-preview",
       messages: [
         { role: "system", content: EXTRACTION_PROMPT },
         {
           role: "user",
-          content: `Extract all grocery promotions from this Delhaize folder content:\n\n${content.substring(0, 15000)}`,
+          content: [
+            {
+              type: "text",
+              text: `Extract all grocery promotions from page ${pageNum} of this ${storeName} folder. Look carefully at every product, price, and discount label.`,
+            },
+            {
+              type: "image_url",
+              image_url: { url: `data:image/jpeg;base64,${imageBase64}` },
+            },
+          ],
         },
       ],
       temperature: 0.1,
-      max_tokens: 8000,
+      max_tokens: 4000,
     }),
   });
 
   if (!res.ok) {
     const err = await res.text();
-    throw new Error(`OpenAI error [${res.status}]: ${err}`);
+    throw new Error(`Groq error [${res.status}]: ${err}`);
   }
 
   const data = await res.json();
@@ -103,87 +149,141 @@ async function extractWithOpenAI(content) {
 
   const jsonMatch = reply.match(/\[[\s\S]*\]/);
   if (!jsonMatch) {
-    log(`  ⚠ No JSON array in AI response: ${reply.substring(0, 200)}`);
+    log(`    ⚠ No JSON found for page ${pageNum}: ${reply.substring(0, 150)}`);
     return [];
   }
 
   try {
     return JSON.parse(jsonMatch[0]);
   } catch {
-    log(`  ⚠ Failed to parse AI response`);
+    log(`    ⚠ Failed to parse response for page ${pageNum}`);
     return [];
   }
 }
 
 // ─── Main Scraper ─────────────────────────────────────────────────────────────
-async function scrapeDelhaize() {
-  log("🚀 Starting Delhaize folder scrape...");
+async function scrapeStore(store) {
+  log(`🚀 Starting ${store.name} folder scrape...`);
+  
+  let latestFolder = store.directUrl || null;
 
-  // Step 1: Fetch the main Kimbino Delhaize page to find folder links
-  log("📄 Fetching Kimbino Delhaize page...");
-  const mainHtml = await fetchPage(DELHAIZE_URL);
-  log(`  Got ${mainHtml.length} bytes of HTML`);
+  if (!latestFolder) {
+    const storeUrl = `${KIMBINO_BASE}${store.path}`;
+    // Step 1: Find the latest folder page URL
+    log(`📄 Fetching Kimbino ${store.name} overview...`);
+    const mainHtml = await fetchPage(storeUrl);
 
-  // Step 2: Extract folder sub-page links from the HTML
-  const folderLinkRegex = /href="(\/delhaize\/delhaize-folder[^"]*?)"/g;
-  const folderLinks = new Set();
-  let match;
-  while ((match = folderLinkRegex.exec(mainHtml)) !== null) {
-    folderLinks.add(KIMBINO_BASE + match[1]);
-  }
+    // Find the most recent folder link
+    const folderRegex = new RegExp(`href="(${store.path}[^"]*?folder[^"]*?)"`, "g");
+    const matches = [];
+    let match;
+    while ((match = folderRegex.exec(mainHtml)) !== null) {
+      matches.push(KIMBINO_BASE + match[1]);
+    }
+    
+    // Pick the first one (usually the newest/next week)
+    if (matches.length > 0) {
+      latestFolder = matches[0];
+    }
 
-  // Also try broader pattern for any Delhaize folder links
-  const broadRegex = /href="(\/delhaize\/[^"]*folder[^"]*?)"/gi;
-  while ((match = broadRegex.exec(mainHtml)) !== null) {
-    folderLinks.add(KIMBINO_BASE + match[1]);
-  }
-
-  log(`  Found ${folderLinks.size} folder link(s)`);
-
-  // Step 3: Scrape all found pages + the main page
-  let allText = stripHtml(mainHtml);
-  log(`  Main page text: ${allText.length} chars`);
-
-  for (const link of folderLinks) {
-    try {
-      log(`  📄 Fetching ${link}...`);
-      const html = await fetchPage(link);
-      const text = stripHtml(html);
-      if (text.length > 100) {
-        allText += `\n\n--- PAGE: ${link} ---\n${text}`;
-        log(`    Got ${text.length} chars`);
+    if (!latestFolder) {
+      // Fallback: try broader pattern
+      const broadRegex = new RegExp(`href="(${store.path}[^"]*)"`, "gi");
+      while ((match = broadRegex.exec(mainHtml)) !== null) {
+        if (match[1].length > store.path.length + 5 && !match[1].includes("archief")) {
+          latestFolder = KIMBINO_BASE + match[1];
+          break;
+        }
       }
-      // Rate limit
-      await new Promise((r) => setTimeout(r, 500));
-    } catch (e) {
-      log(`    ⚠ Failed: ${e.message}`);
     }
   }
 
-  if (allText.length < 200) {
-    log("❌ Not enough content found. Exiting.");
+  if (!latestFolder) {
+    log(`❌ Could not find any ${store.name} folder links`);
     return [];
   }
 
-  log(`📝 Total scraped text: ${allText.length} chars`);
+  log(`📂 Found folder: ${latestFolder}`);
 
-  // Step 4: Extract promotions with OpenAI
-  log("🤖 Extracting promotions with OpenAI GPT-4o...");
-  const promos = await extractWithOpenAI(allText);
-  log(`✅ Extracted ${promos.length} promotions!`);
+  // Step 2: Fetch the folder page to find page images
+  log("📄 Fetching folder pages...");
+  const folderHtml = await fetchPage(latestFolder);
+  const pageImages = extractPageImages(folderHtml);
 
-  return promos;
+  log(`  Found ${pageImages.length} folder pages`);
+
+  if (pageImages.length === 0) {
+    log("❌ No folder page images found");
+    return [];
+  }
+
+  // Step 3: Process each page image with vision AI
+  const allPromos = [];
+  const maxPages = Math.min(pageImages.length, 5); // Limit to 5 pages per store to prevent rate limits
+
+  for (let i = 0; i < maxPages; i++) {
+    const img = pageImages[i];
+    // Skip cover page (page 0)
+    if (img.page === 0) {
+      log(`  ⏭ Skipping cover page`);
+      continue;
+    }
+
+    try {
+      log(`  🖼️  Processing page ${img.page}...`);
+      const base64 = await imageToBase64(img.url);
+      log(`    Downloaded (${Math.round(base64.length / 1024)}KB)`);
+
+      const promos = await extractFromImage(base64, img.page, store.name);
+      
+      // Add store data to each promo
+      const promosWithStore = promos.map(p => ({
+        ...p,
+        store: store.id
+      }));
+      
+      log(`    ✅ Found ${promosWithStore.length} promotions`);
+      allPromos.push(...promosWithStore);
+
+      // Rate limit between API calls
+      await new Promise((r) => setTimeout(r, 2000));
+    } catch (e) {
+      log(`    ⚠ Error on page ${img.page}: ${e.message}`);
+      // If rate limited, wait longer
+      if (e.message.includes("429")) {
+        log(`    ⏳ Rate limited, waiting 30s...`);
+        await new Promise((r) => setTimeout(r, 30000));
+      }
+    }
+  }
+
+  log(`\n✅ Total: ${allPromos.length} promotions extracted from ${maxPages} pages`);
+  return allPromos;
 }
 
 // ─── Entry Point ──────────────────────────────────────────────────────────────
 async function main() {
-  if (!OPENAI_API_KEY || OPENAI_API_KEY.includes("your-")) {
-    console.error("❌ Please set your OPENAI_API_KEY in the .env file");
+  if (!GROQ_API_KEY || GROQ_API_KEY.includes("your-")) {
+    console.error("❌ Please set your GROQ_API_KEY in the .env file");
+    console.error("   Get a free key at: https://console.groq.com/keys");
     process.exit(1);
   }
 
   try {
-    const promotions = await scrapeDelhaize();
+    const allStoresPromotions = [];
+    
+    // Scrape all stores sequentially
+    for (const store of STORES) {
+      try {
+        const promos = await scrapeStore(store);
+        allStoresPromotions.push(...promos);
+      } catch (err) {
+        console.error(`❌ Failed to scrape ${store.name}: ${err.message}`);
+      }
+      
+      // Delay between stores
+      await new Promise((r) => setTimeout(r, 5000));
+    }
 
     // Save results
     const dataDir = join(__dirname, "data");
@@ -191,29 +291,29 @@ async function main() {
 
     const outputPath = join(dataDir, "promotions.json");
     const output = {
-      store: "delhaize",
       scraped_at: new Date().toISOString(),
-      total_promotions: promotions.length,
-      promotions,
+      stores_scraped: STORES.map(s => s.id),
+      total_promotions: allStoresPromotions.length,
+      promotions: allStoresPromotions,
     };
 
     writeFileSync(outputPath, JSON.stringify(output, null, 2), "utf-8");
-    log(`💾 Saved ${promotions.length} promotions to ${outputPath}`);
+    log(`💾 Saved ${allStoresPromotions.length} total promotions to ${outputPath}`);
 
     // Print summary
     console.log("\n═══════════════════════════════════════");
-    console.log(`  🛒 Delhaize Promotions: ${promotions.length} items`);
+    console.log(`  🛒 Overall Promotions: ${allStoresPromotions.length} items from ${STORES.length} stores`);
     console.log("═══════════════════════════════════════");
-    for (const p of promotions.slice(0, 10)) {
+    for (const p of allStoresPromotions.slice(0, 15)) {
       const price = p.promo_price ? `€${p.promo_price}` : p.discount_type || "—";
-      console.log(`  • ${p.product_name} ${p.brand ? `(${p.brand})` : ""} → ${price}`);
+      console.log(`  • [${p.store.toUpperCase()}] ${p.product_name} ${p.brand ? `(${p.brand})` : ""} → ${price}`);
     }
-    if (promotions.length > 10) {
-      console.log(`  ... and ${promotions.length - 10} more`);
+    if (allStoresPromotions.length > 15) {
+      console.log(`  ... and ${allStoresPromotions.length - 15} more across all stores`);
     }
     console.log("═══════════════════════════════════════\n");
   } catch (e) {
-    console.error(`\n❌ Scrape failed: ${e.message}`);
+    console.error(`\n❌ Scrape process failed: ${e.message}`);
     process.exit(1);
   }
 }
