@@ -263,9 +263,14 @@ async function scrapeStore(store) {
 
 // ─── Entry Point ──────────────────────────────────────────────────────────────
 async function main() {
-  if (!GROQ_API_KEY || GROQ_API_KEY.includes("your-")) {
-    console.error("❌ Please set your GROQ_API_KEY in the .env file");
-    console.error("   Get a free key at: https://console.groq.com/keys");
+  if (!GROQ_API_KEY || GROQ_API_KEY.trim() === "" || GROQ_API_KEY.includes("your-")) {
+    console.error("❌ GROQ_API_KEY is missing!");
+    console.error("   Local: Set it in the .env file.");
+    console.error("   Vercel: Add it to 'Environment Variables' in your project settings.");
+    console.error("   Get a key at: https://console.groq.com/keys");
+    
+    // In CI/Vercel, if we want the build to succeed even without scraping (showing empty/cached data),
+    // we could exit with 0, but usually failing the build is safer to avoid "empty" deployments.
     process.exit(1);
   }
 
