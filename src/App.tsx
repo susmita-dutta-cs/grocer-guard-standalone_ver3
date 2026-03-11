@@ -1,165 +1,138 @@
-import { useState, useEffect, useMemo } from 'react'
-import { Search, ShoppingBasket, Filter, ExternalLink, Calendar, RefreshCcw } from 'lucide-react'
+import { useState, useMemo } from "react";
+import { ShoppingBasket, Sparkles, RefreshCcw } from "lucide-react";
+import heroImage from "./assets/hero-groceries.png";
+import SearchBar from "./components/SearchBar";
+import CategoryFilter from "./components/CategoryFilter";
+import ProductCard from "./components/ProductCard";
+import BottomNav from "./components/BottomNav";
+import { useGroceryData } from "./hooks/useGroceryData";
+import { useI18n } from "./hooks/useI18n";
+import { useProductName } from "./hooks/useProductName";
+import type { Product } from "./data/groceryData";
 
-interface Promotion {
-  product_name: string;
-  brand: string | null;
-  quantity: string | null;
-  discount_type: string;
-  promo_price: number | null;
-  original_price: number | null;
-  category: string;
-  valid_from: string | null;
-  valid_until: string | null;
-  store: string;
-}
+const App = () => {
+  const [search, setSearch] = useState("");
+  const [category, setCategory] = useState("All");
+  const [activeTab, setActiveTab] = useState("home");
+  const { products, isLoading } = useGroceryData();
+  const { t } = useI18n();
+  const { getProductName } = useProductName();
 
-interface PromotionsData {
-  scraped_at: string;
-  stores_scraped: string[];
-  total_promotions: number;
-  promotions: Promotion[];
-}
-
-function App() {
-  const [data, setData] = useState<PromotionsData | null>(null);
-  const [loading, setLoading] = useState(true);
-  const [search, setSearch] = useState('');
-  const [activeStore, setActiveStore] = useState('all');
-
-  useEffect(() => {
-    fetch('/data/promotions.json')
-      .then(res => res.json())
-      .then(json => {
-        setData(json);
-        setLoading(false);
-      })
-      .catch(err => {
-        console.error('Failed to load promotions:', err);
-        setLoading(false);
-      });
-  }, []);
-
-  const filteredPromos = useMemo(() => {
-    if (!data) return [];
-    return data.promotions.filter(p => {
-      const matchesSearch = p.product_name.toLowerCase().includes(search.toLowerCase()) ||
-                          (p.brand && p.brand.toLowerCase().includes(search.toLowerCase()));
-      const matchesStore = activeStore === 'all' || p.store === activeStore;
-      return matchesSearch && matchesStore;
+  const filtered = useMemo(() => {
+    return products.filter((p) => {
+      const localName = getProductName(p);
+      const matchesSearch = localName.toLowerCase().includes(search.toLowerCase()) ||
+        p.name.toLowerCase().includes(search.toLowerCase()) ||
+        (p.brand && p.brand.toLowerCase().includes(search.toLowerCase()));
+      const matchesCategory = category === "All" || p.category === category;
+      return matchesSearch && matchesCategory;
     });
-  }, [data, search, activeStore]);
+  }, [search, category, products, getProductName]);
 
-  const stores = ['all', ...(data?.stores_scraped || [])];
+  const handleNavigate = (tab: string) => {
+    setActiveTab(tab);
+  };
 
-  if (loading) {
+  if (isLoading) {
     return (
-      <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100vh', background: '#0c0e12' }}>
-        <RefreshCcw className="animate-spin" size={48} color="#4f46e5" />
+      <div className="min-h-screen bg-background flex flex-col items-center justify-center">
+        <RefreshCcw className="h-10 w-10 text-primary animate-spin" />
+        <p className="mt-4 text-muted-foreground font-medium">Loading grocery deals...</p>
       </div>
     );
   }
 
   return (
-    <>
-      <header className="premium-header">
-        <div className="container">
-          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '1rem', marginBottom: '1rem' }}>
-            <div className="glass-panel" style={{ padding: '0.8rem', display: 'flex' }}>
-              <ShoppingBasket size={32} color="#4f46e5" />
-            </div>
+    <div className="min-h-screen bg-background pb-20 font-sans">
+      <header className="glass border-b border-border sticky top-0 z-40">
+        <div className="max-w-lg mx-auto px-4 py-3 flex items-center gap-3">
+          <div className="h-9 w-9 rounded-xl bg-primary/15 flex items-center justify-center">
+            <ShoppingBasket className="h-5 w-5 text-primary" />
           </div>
-          <h1>GrocerySaver Premium</h1>
-          <p>Smart promotion tracking for Belgian supermarkets</p>
-          {data && (
-            <div style={{ marginTop: '1rem', fontSize: '0.8rem', color: 'var(--text-muted)' }}>
-              Last updated: {new Date(data.scraped_at).toLocaleString()} • {data.total_promotions} deals found
-            </div>
-          )}
+          <div className="flex-1">
+            <h1 className="font-display font-bold text-base text-white">GrocerySaver</h1>
+            <p className="text-[10px] text-muted-foreground">{t("app.tagline")}</p>
+          </div>
+          <div className="h-8 w-8 rounded-full bg-muted flex items-center justify-center">
+            <Sparkles className="h-4 w-4 text-primary" />
+          </div>
         </div>
       </header>
 
-      <main className="container">
-        <div className="controls glass-panel" style={{ padding: '1.5rem', marginBottom: '3rem' }}>
-          <div style={{ position: 'relative', flex: '1' }}>
-            <Search style={{ position: 'absolute', left: '1rem', top: '50%', transform: 'translateY(-50%)', color: 'var(--text-muted)' }} size={20} />
-            <input 
-              type="text" 
-              className="search-input" 
-              style={{ paddingLeft: '3rem' }}
-              placeholder="Search products or brands..." 
-              value={search}
-              onChange={(e) => setSearch(e.target.value)}
-            />
-          </div>
-          
-          <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap', alignItems: 'center' }}>
-            <Filter size={18} color="var(--text-muted)" style={{ marginRight: '0.5rem' }} />
-            {stores.map(store => (
-              <button 
-                key={store}
-                className={`filter-chip ${activeStore === store ? 'active' : ''}`}
-                onClick={() => setActiveStore(store)}
-              >
-                {store.toUpperCase()}
-              </button>
-            ))}
-          </div>
-        </div>
-
-        <div className="promo-grid">
-          {filteredPromos.map((promo, idx) => (
-            <div key={`${promo.store}-${idx}`} className="promo-card glass-panel animate-fade-in" style={{ animationDelay: `${(idx % 12) * 0.05}s`, position: 'relative' }}>
-              <div className="promo-badge">{promo.discount_type}</div>
-              <div className="promo-content">
-                <div className="promo-store">{promo.store}</div>
-                <h3 className="promo-title">{promo.product_name}</h3>
-                {promo.brand && <div className="promo-brand">{promo.brand}</div>}
-                
-                <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', fontSize: '0.85rem', color: 'var(--text-muted)', marginTop: '0.5rem' }}>
-                  <Calendar size={14} />
-                  <span>
-                    {promo.valid_until ? `Until ${new Date(promo.valid_until).toLocaleDateString()}` : 'Validity unknown'}
-                  </span>
+      <main className="max-w-lg mx-auto px-4 py-4 space-y-5">
+        {activeTab === "home" && (
+          <>
+            <section className="relative bg-gradient-to-br from-primary/15 via-card to-card rounded-2xl border border-border overflow-hidden p-5">
+              <div className="flex items-center gap-4">
+                <div className="flex-1 space-y-2">
+                  <h2 className="font-display font-extrabold text-2xl text-white leading-tight">
+                    {t("hero.title1")}
+                    <br />
+                    <span className="text-primary">{t("hero.title2")}</span>
+                  </h2>
+                  <p className="text-muted-foreground text-xs">{t("hero.subtitle")}</p>
                 </div>
+                <img src={heroImage} alt="Fresh groceries" className="w-24 h-24 rounded-lg object-cover opacity-90 shadow-2xl" />
               </div>
+            </section>
 
-              <div className="promo-footer">
-                <div className="promo-price-group">
-                  {promo.promo_price ? (
-                    <>
-                      <span className="promo-price">€{promo.promo_price.toFixed(2)}</span>
-                      {promo.original_price && <span className="promo-old-price">€{promo.original_price.toFixed(2)}</span>}
-                    </>
-                  ) : (
-                    <span className="promo-price" style={{ fontSize: '1rem', color: 'var(--secondary)' }}>{promo.discount_type}</span>
-                  )}
-                  {promo.quantity && <span className="promo-quantity">{promo.quantity}</span>}
+            <SearchBar value={search} onChange={setSearch} />
+
+            <CategoryFilter selected={category} onSelect={setCategory} />
+
+            <div className="space-y-3">
+              {filtered.map((product, i) => (
+                <ProductCard
+                  key={product.id}
+                  product={product}
+                  index={i}
+                />
+              ))}
+              {filtered.length === 0 && (
+                <div className="flex flex-col items-center justify-center py-12 text-center">
+                  <ShoppingBasket className="h-12 w-12 text-muted-foreground/20 mb-3" />
+                  <p className="text-sm text-muted-foreground">No deals found for "{search}"</p>
                 </div>
-                
-                <button style={{ background: 'transparent', border: 'none', color: 'var(--primary)', cursor: 'pointer' }}>
-                  <ExternalLink size={20} />
-                </button>
+              )}
+            </div>
+          </>
+        )}
+
+        {activeTab === "basket" && (
+          <div className="flex flex-col items-center justify-center py-20 text-center space-y-4">
+            <div className="h-16 w-16 rounded-full bg-muted flex items-center justify-center">
+              <ShoppingBasket className="h-8 w-8 text-muted-foreground" />
+            </div>
+            <div>
+              <h3 className="text-lg font-semibold text-white">Your Basket is Empty</h3>
+              <p className="text-sm text-muted-foreground">Start adding grocery deals to save!</p>
+            </div>
+          </div>
+        )}
+
+        {activeTab === "settings" && (
+          <div className="space-y-6">
+            <h2 className="text-lg font-bold text-white px-1">Settings</h2>
+            <div className="bg-card border border-border rounded-2xl p-4 space-y-4">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-sm font-medium text-white">Language</p>
+                  <p className="text-xs text-muted-foreground">Choose your preferred language</p>
+                </div>
+                <select className="bg-background border border-border rounded-lg px-2 py-1 text-xs text-white">
+                  <option>English</option>
+                  <option>Dutch</option>
+                  <option>French</option>
+                </select>
               </div>
             </div>
-          ))}
-
-          {filteredPromos.length === 0 && (
-            <div style={{ gridColumn: '1 / -1', textAlign: 'center', padding: '5rem 0', color: 'var(--text-muted)' }}>
-              <RefreshCcw size={48} style={{ opacity: 0.2, marginBottom: '1rem' }} />
-              <p>No promotions found matching your criteria.</p>
-            </div>
-          )}
-        </div>
+          </div>
+        )}
       </main>
 
-      <footer style={{ marginTop: 'auto', padding: '3rem 1rem', textAlign: 'center', borderTop: '1px solid var(--card-border)', background: 'rgba(0,0,0,0.2)' }}>
-        <p style={{ color: 'var(--text-muted)', fontSize: '0.9rem' }}>
-          © {new Date().getFullYear()} GrocerySaver Premium • Powered by AI Intelligence
-        </p>
-      </footer>
-    </>
-  )
-}
+      <BottomNav active={activeTab} onNavigate={handleNavigate} />
+    </div>
+  );
+};
 
-export default App
+export default App;
