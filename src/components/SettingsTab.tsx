@@ -1,7 +1,12 @@
 import { Globe, Shield, Trash2, Info, ChevronRight } from "lucide-react";
 import { useI18n } from "../hooks/useI18n";
 
-const SettingsTab = () => {
+interface SettingsTabProps {
+  user: string;
+  onLogout: () => void;
+}
+
+const SettingsTab = ({ user, onLogout }: SettingsTabProps) => {
   const { language, setLanguage } = useI18n();
 
   const handleClearData = () => {
@@ -46,6 +51,20 @@ const SettingsTab = () => {
             <div className="flex-1">
               <p className="text-sm font-medium text-white">Privacy & Terms</p>
               <p className="text-[10px] text-muted-foreground">Your data stays on your device</p>
+            </div>
+            <ChevronRight className="h-4 w-4 text-muted-foreground" />
+          </button>
+
+          <button 
+            onClick={onLogout}
+            className="w-full p-4 flex items-center gap-3 hover:bg-white/5 transition-colors text-left border-b border-border/50"
+          >
+            <div className="h-8 w-8 rounded-lg bg-muted flex items-center justify-center text-muted-foreground">
+              <LogIn className="h-4 w-4 rotate-180" />
+            </div>
+            <div className="flex-1">
+              <p className="text-sm font-medium text-white">Sign Out</p>
+              <p className="text-[10px] text-muted-foreground">Logged in as {user}</p>
             </div>
             <ChevronRight className="h-4 w-4 text-muted-foreground" />
           </button>

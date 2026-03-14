@@ -8,6 +8,7 @@ import BottomNav from "./components/BottomNav";
 import AdminTab from "./components/AdminTab";
 import BasketTab from "./components/BasketTab";
 import SettingsTab from "./components/SettingsTab";
+import AuthScreen from "./components/AuthScreen";
 import { useGroceryData } from "./hooks/useGroceryData";
 import { useI18n } from "./hooks/useI18n";
 import { useProductName } from "./hooks/useProductName";
@@ -18,6 +19,7 @@ const App = () => {
   const [search, setSearch] = useState("");
   const [category, setCategory] = useState("All");
   const [activeTab, setActiveTab] = useState("home");
+  const [user, setUser] = useState<string | null>(() => localStorage.getItem("shelfsmart_user"));
   const { products, setProducts, isLoading, getStats } = useGroceryData();
   const [basket, setBasket] = useState<string[]>([]);
   const { t } = useI18n();
@@ -43,6 +45,15 @@ const App = () => {
   const handleNavigate = (tab: string) => {
     setActiveTab(tab);
   };
+
+  const handleLogin = (email: string) => {
+    localStorage.setItem("shelfsmart_user", email);
+    setUser(email);
+  };
+
+  if (!user) {
+    return <AuthScreen onLogin={handleLogin} />;
+  }
 
   if (isLoading) {
     return (
@@ -178,7 +189,13 @@ const App = () => {
         )}
 
         {activeTab === "settings" && (
-          <SettingsTab />
+          <SettingsTab 
+            user={user} 
+            onLogout={() => {
+              localStorage.removeItem("shelfsmart_user");
+              setUser(null);
+            }} 
+          />
         )}
 
         {activeTab === "admin" && (
