@@ -5,21 +5,28 @@ import SearchBar from "./components/SearchBar";
 import CategoryFilter from "./components/CategoryFilter";
 import ProductCard from "./components/ProductCard";
 import BottomNav from "./components/BottomNav";
+import AdminTab from "./components/AdminTab";
 import { useGroceryData } from "./hooks/useGroceryData";
 import { useI18n } from "./hooks/useI18n";
 import { useProductName } from "./hooks/useProductName";
+import { useFavorites } from "./hooks/useFavorites";
 import type { Product } from "./data/groceryData";
 
 const App = () => {
   const [search, setSearch] = useState("");
   const [category, setCategory] = useState("All");
   const [activeTab, setActiveTab] = useState("home");
-  const { products, isLoading } = useGroceryData();
+  const { products, setProducts, isLoading } = useGroceryData();
   const { t } = useI18n();
   const { getProductName } = useProductName();
+  const { isFavorite, toggleFavorite, favoritesCount, favorites } = useFavorites();
 
   const filtered = useMemo(() => {
-    return products.filter((p) => {
+    const base = activeTab === "favorites" 
+      ? products.filter(p => favorites.includes(p.id))
+      : products;
+
+    return base.filter((p) => {
       const localName = getProductName(p);
       const matchesSearch = localName.toLowerCase().includes(search.toLowerCase()) ||
         p.name.toLowerCase().includes(search.toLowerCase()) ||
@@ -86,6 +93,8 @@ const App = () => {
                   key={product.id}
                   product={product}
                   index={i}
+                  isFavorite={isFavorite(product.id)}
+                  onToggleFavorite={() => toggleFavorite(product.id)}
                 />
               ))}
               {filtered.length === 0 && (
@@ -128,9 +137,13 @@ const App = () => {
             </div>
           </div>
         )}
+
+        {activeTab === "admin" && (
+          <AdminTab products={products} onUpdateProducts={setProducts} />
+        )}
       </main>
 
-      <BottomNav active={activeTab} onNavigate={handleNavigate} />
+      <BottomNav active={activeTab} onNavigate={handleNavigate} favoritesCount={favoritesCount} />
     </div>
   );
 };

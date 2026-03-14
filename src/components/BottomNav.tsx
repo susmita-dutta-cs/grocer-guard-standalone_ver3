@@ -1,4 +1,4 @@
-import { Home, Heart, ShoppingCart, Settings } from "lucide-react";
+import { Home, Heart, ShoppingCart, Settings, ShieldCheck } from "lucide-react";
 import { useI18n } from "../hooks/useI18n";
 
 interface BottomNavProps {
@@ -13,6 +13,7 @@ const tabIcons = {
   favorites: Heart,
   basket: ShoppingCart,
   settings: Settings,
+  admin: ShieldCheck,
 };
 
 const tabKeys: Record<string, string> = {
@@ -20,11 +21,12 @@ const tabKeys: Record<string, string> = {
   favorites: "Favorites",
   basket: "nav.basket",
   settings: "nav.settings",
+  admin: "Admin",
 };
 
 const BottomNav = ({ active, onNavigate, basketCount = 0, favoritesCount = 0 }: BottomNavProps) => {
   const { t } = useI18n();
-  const tabs = ["home", "favorites", "basket", "settings"] as const;
+  const tabs = ["home", "favorites", "basket", "settings", "admin"] as const;
 
   return (
     <nav className="fixed bottom-0 left-0 right-0 z-50 glass border-t border-border">

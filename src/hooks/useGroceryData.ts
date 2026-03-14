@@ -8,28 +8,10 @@ export function useGroceryData() {
   useEffect(() => {
     async function fetchData() {
       try {
-        const res = await fetch("/data/promotions.json");
+        const res = await fetch("/data/db.json");
         if (!res.ok) throw new Error("Failed to fetch");
         const data = await res.json();
-        
-        // Transform individual promotions into grouped Product objects if names match
-        // Or for now, treat each promotion as a separate product to match the scraper's intent
-        const transformed: Product[] = data.promotions.map((p: any, idx: number) => ({
-          id: `promo-${idx}`,
-          name: p.product_name,
-          name_nl: p.product_name,
-          brand: p.brand || undefined,
-          category: p.category || "Other",
-          unit: p.quantity || "per unit",
-          image: getCategoryEmoji(p.category),
-          prices: [{
-            storeId: p.store,
-            price: p.promo_price || 0,
-            onSale: true
-          }]
-        }));
-
-        setProducts(transformed);
+        setProducts(data.products || []);
       } catch (e) {
         console.error("Error loading grocery data:", e);
       } finally {
@@ -41,6 +23,7 @@ export function useGroceryData() {
 
   return {
     products,
+    setProducts,
     stores: staticStores,
     isLoading,
   };
