@@ -27,7 +27,7 @@ const tabKeys: Record<string, string> = {
 
 const BottomNav = ({ active, onNavigate, basketCount = 0, favoritesCount = 0, isAdmin = false }: BottomNavProps) => {
   const { t } = useI18n();
-  const tabs = ["home", "favorites", "basket", "settings", (isAdmin ? "admin" : null)].filter(Boolean) as string[];
+  const tabs = (["home", "favorites", "basket", "settings", (isAdmin ? "admin" : null)].filter(Boolean) as (keyof typeof tabIcons)[]);
 
   return (
     <nav className="fixed bottom-0 left-0 right-0 z-50 glass border-t border-white/5 pt-1 pb-[var(--safe-area-bottom)]">
