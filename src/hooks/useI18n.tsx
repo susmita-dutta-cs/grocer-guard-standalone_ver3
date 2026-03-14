@@ -3,8 +3,8 @@ import { createContext, useContext, useState } from "react";
 const translations = {
   en: {
     "app.tagline": "Save up to 40% on your weekly groceries",
-    "hero.title1": "Groceries",
-    "hero.title2": "Save Smarter",
+    "hero.title1": "ShelfSmart",
+    "hero.title2": "Track Prices. Catch Deals. Save More.",
     "hero.subtitle": "Compare prices across all Belgian supermarkets in real-time.",
     "search.placeholder": "Search for products...",
     "nav.home": "Home",
@@ -16,8 +16,8 @@ const translations = {
   },
   nl: {
     "app.tagline": "Bespaar tot 40% op je wekelijkse boodschappen",
-    "hero.title1": "Boodschappen",
-    "hero.title2": "Slimmer Besparen",
+    "hero.title1": "ShelfSmart",
+    "hero.title2": "Track Prices. Catch Deals. Save More.",
     "hero.subtitle": "Vergelijk prijzen van alle Belgische supermarkten in real-time.",
     "search.placeholder": "Zoek naar producten...",
     "nav.home": "Home",
@@ -38,7 +38,7 @@ export const categoryKeyMap: Record<string, string> = {
 const I18nContext = createContext({
   t: (key: string) => key,
   language: "en",
-  setLanguage: (lang: string) => {},
+  setLanguage: (_lang: string) => {},
 });
 
 export const I18nProvider = ({ children }: { children: React.ReactNode }) => {

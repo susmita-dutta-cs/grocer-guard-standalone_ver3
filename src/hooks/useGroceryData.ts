@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { Product, Store, stores as staticStores } from "../data/groceryData";
+import { Product, stores as staticStores, getSavingsPercent } from "../data/groceryData";
 
 export function useGroceryData() {
   const [products, setProducts] = useState<Product[]>([]);
@@ -26,6 +26,21 @@ export function useGroceryData() {
     setProducts,
     stores: staticStores,
     isLoading,
+    getStats: () => {
+      if (products.length === 0) return { total: 0, avgSavings: 0, totalPotentialSavings: 0 };
+      const total = products.length;
+      const savings = products.map(p => getSavingsPercent(p));
+      const avgSavings = Math.round(savings.reduce((a, b) => a + b, 0) / total);
+      
+      // Calculate total potential savings (diff between high and low for a typical "basket")
+      const totalPotentialSavings = products.reduce((acc, p) => {
+        const prices = p.prices.map(pr => pr.price);
+        const diff = Math.max(...prices) - Math.min(...prices);
+        return acc + diff;
+      }, 0);
+
+      return { total, avgSavings, totalPotentialSavings };
+    }
   };
 }
 

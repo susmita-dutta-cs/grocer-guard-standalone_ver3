@@ -6,6 +6,8 @@ import CategoryFilter from "./components/CategoryFilter";
 import ProductCard from "./components/ProductCard";
 import BottomNav from "./components/BottomNav";
 import AdminTab from "./components/AdminTab";
+import BasketTab from "./components/BasketTab";
+import SettingsTab from "./components/SettingsTab";
 import { useGroceryData } from "./hooks/useGroceryData";
 import { useI18n } from "./hooks/useI18n";
 import { useProductName } from "./hooks/useProductName";
@@ -16,10 +18,12 @@ const App = () => {
   const [search, setSearch] = useState("");
   const [category, setCategory] = useState("All");
   const [activeTab, setActiveTab] = useState("home");
-  const { products, setProducts, isLoading } = useGroceryData();
+  const { products, setProducts, isLoading, getStats } = useGroceryData();
+  const [basket, setBasket] = useState<string[]>([]);
   const { t } = useI18n();
   const { getProductName } = useProductName();
   const { isFavorite, toggleFavorite, favoritesCount, favorites } = useFavorites();
+  const stats = getStats();
 
   const filtered = useMemo(() => {
     const base = activeTab === "favorites" 
@@ -57,7 +61,7 @@ const App = () => {
             <ShoppingBasket className="h-5 w-5 text-primary" />
           </div>
           <div className="flex-1">
-            <h1 className="font-display font-bold text-base text-white">GrocerySaver</h1>
+            <h1 className="font-display font-bold text-base text-white">ShelfSmart</h1>
             <p className="text-[10px] text-muted-foreground">{t("app.tagline")}</p>
           </div>
           <div className="h-8 w-8 rounded-full bg-muted flex items-center justify-center">
@@ -82,12 +86,31 @@ const App = () => {
                 <img src={heroImage} alt="Fresh groceries" className="w-24 h-24 rounded-lg object-cover opacity-90 shadow-2xl" />
               </div>
             </section>
+            <section className="grid grid-cols-3 gap-3">
+              <div className="bg-card/50 border border-border p-3 rounded-2xl flex flex-col items-center justify-center text-center">
+                <span className="text-primary font-bold text-lg">{stats.total}</span>
+                <span className="text-[10px] text-muted-foreground uppercase tracking-wider font-semibold">Products</span>
+              </div>
+              <div className="bg-card/50 border border-border p-3 rounded-2xl flex flex-col items-center justify-center text-center">
+                <span className="text-primary font-bold text-lg">€{(stats.avgSavings / 100).toFixed(2)}</span>
+                <span className="text-[10px] text-muted-foreground uppercase tracking-wider font-semibold">Avg. Savings</span>
+              </div>
+              <div className="bg-card/50 border border-border p-3 rounded-2xl flex flex-col items-center justify-center text-center">
+                <span className="text-primary font-bold text-lg">€{stats.totalPotentialSavings.toFixed(0)}</span>
+                <span className="text-[10px] text-muted-foreground uppercase tracking-wider font-semibold">Total Potential</span>
+              </div>
+            </section>
 
             <SearchBar value={search} onChange={setSearch} />
 
             <CategoryFilter selected={category} onSelect={setCategory} />
 
-            <div className="space-y-3">
+            <div className="flex items-center justify-between px-1">
+              <h3 className="font-display font-bold text-sm text-white">Hot Deals & Trending</h3>
+              <Sparkles className="h-4 w-4 text-primary" />
+            </div>
+
+            <div className="grid grid-cols-1 gap-3">
               {filtered.map((product, i) => (
                 <ProductCard
                   key={product.id}
@@ -108,34 +131,14 @@ const App = () => {
         )}
 
         {activeTab === "basket" && (
-          <div className="flex flex-col items-center justify-center py-20 text-center space-y-4">
-            <div className="h-16 w-16 rounded-full bg-muted flex items-center justify-center">
-              <ShoppingBasket className="h-8 w-8 text-muted-foreground" />
-            </div>
-            <div>
-              <h3 className="text-lg font-semibold text-white">Your Basket is Empty</h3>
-              <p className="text-sm text-muted-foreground">Start adding grocery deals to save!</p>
-            </div>
-          </div>
+          <BasketTab 
+            items={products.filter(p => basket.includes(p.id))} 
+            onRemove={(id) => setBasket(prev => prev.filter(iid => iid !== id))} 
+          />
         )}
 
         {activeTab === "settings" && (
-          <div className="space-y-6">
-            <h2 className="text-lg font-bold text-white px-1">Settings</h2>
-            <div className="bg-card border border-border rounded-2xl p-4 space-y-4">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm font-medium text-white">Language</p>
-                  <p className="text-xs text-muted-foreground">Choose your preferred language</p>
-                </div>
-                <select className="bg-background border border-border rounded-lg px-2 py-1 text-xs text-white">
-                  <option>English</option>
-                  <option>Dutch</option>
-                  <option>French</option>
-                </select>
-              </div>
-            </div>
-          </div>
+          <SettingsTab />
         )}
 
         {activeTab === "admin" && (
@@ -143,7 +146,12 @@ const App = () => {
         )}
       </main>
 
-      <BottomNav active={activeTab} onNavigate={handleNavigate} favoritesCount={favoritesCount} />
+      <BottomNav 
+        active={activeTab} 
+        onNavigate={handleNavigate} 
+        favoritesCount={favoritesCount} 
+        basketCount={basket.length} 
+      />
     </div>
   );
 };
