@@ -2,7 +2,7 @@ import { Trash2, ShoppingBasket, TrendingDown, Store, Plus, Search, Tag } from "
 import { Product, getLowestPrice, getHighestPrice, stores, categories } from "../data/groceryData";
 import { useProductName } from "../hooks/useProductName";
 import { SmartBasketResult } from "../hooks/useRecommendations";
-import { useMemo } from "react";
+import { useMemo, useState } from "react";
 
 interface BasketTabProps {
   items: Product[];
