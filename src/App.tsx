@@ -103,6 +103,8 @@ const App = () => {
     );
   }
 
+  const isAdmin = user === "admin@shelfsmart.local";
+
   return (
     <div className="min-h-screen bg-background pb-24 font-sans relative overflow-hidden">
       {/* Premium Background Accents */}
@@ -352,7 +354,7 @@ const App = () => {
           />
         )}
 
-        {activeTab === "admin" && (
+        {activeTab === "admin" && isAdmin && (
           <AdminTab products={products} onUpdateProducts={setProducts} />
         )}
       </main>
@@ -362,6 +364,7 @@ const App = () => {
         onNavigate={handleNavigate} 
         favoritesCount={favoritesCount} 
         basketCount={basket.length} 
+        isAdmin={isAdmin}
       />
     </div>
   );
