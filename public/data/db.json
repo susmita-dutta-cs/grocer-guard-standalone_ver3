@@ -26373,8 +26373,12 @@
       "prices": [
         {
           "storeId": "aldi",
-          "price": 6.44,
-          "onSale": false
+          "price": 1.39,
+          "onSale": true,
+          "promo_details": {
+            "discount_type": "1+1 gratis",
+            "valid_until": "2020-03-21"
+          }
         },
         {
           "storeId": "albert-heijn",
@@ -195001,5 +195005,6 @@
       ]
     }
   ],
-  "generated_at": "2026-03-14T19:38:46.149Z"
+  "generated_at": "2026-03-14T19:38:46.149Z",
+  "scraped_at": "2026-03-14T19:51:19.612Z"
 }
