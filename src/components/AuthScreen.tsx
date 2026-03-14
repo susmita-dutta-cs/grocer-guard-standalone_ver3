@@ -34,7 +34,7 @@ const AuthScreen = ({ onLogin }: AuthScreenProps) => {
             <ShoppingBasket className="h-10 w-10 text-primary relative z-10 animate-float" />
           </div>
           <h1 className="text-4xl font-display font-black text-white tracking-tighter leading-none">ShelfSmart</h1>
-          <p className="text-muted-foreground/60 text-xs font-medium uppercase tracking-[0.2em] mt-2 italic">Mastering the Cart</p>
+          <p className="text-muted-foreground/60 text-xs font-medium uppercase tracking-[0.2em] mt-2 italic">Beat the inflation</p>
         </div>
 
         <div className="bg-card/40 backdrop-blur-2xl border border-white/5 rounded-[32px] p-8 shadow-2xl relative overflow-hidden group">
