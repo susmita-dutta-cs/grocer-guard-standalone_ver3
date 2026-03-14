@@ -10,14 +10,16 @@ import BasketTab from "./components/BasketTab";
 import SettingsTab from "./components/SettingsTab";
 import AuthScreen from "./components/AuthScreen";
 import { useGroceryData } from "./hooks/useGroceryData";
-import { useI18n } from "./hooks/useI18n";
+import { useI18n, categoryKeyMap } from "./hooks/useI18n";
 import { useProductName } from "./hooks/useProductName";
 import { useFavorites } from "./hooks/useFavorites";
+import { Store, stores } from "./data/groceryData";
 
 
 const App = () => {
   const [search, setSearch] = useState("");
   const [category, setCategory] = useState("All");
+  const [selectedStores, setSelectedStores] = useState<string[]>([]);
   const [activeTab, setActiveTab] = useState("home");
   const [user, setUser] = useState<string | null>(() => localStorage.getItem("shelfsmart_user"));
   const { products, setProducts, isLoading, getStats } = useGroceryData();
@@ -28,9 +30,13 @@ const App = () => {
   const stats = getStats();
 
   const filtered = useMemo(() => {
-    const base = activeTab === "favorites" 
+    let base = activeTab === "favorites" 
       ? products.filter(p => favorites.includes(p.id))
       : products;
+
+    if (activeTab === "favorites" && selectedStores.length > 0) {
+      base = base.filter(p => p.prices.some(pr => selectedStores.includes(pr.storeId)));
+    }
 
     return base.filter((p) => {
       const localName = getProductName(p);
@@ -40,7 +46,15 @@ const App = () => {
       const matchesCategory = category === "All" || p.category === category;
       return matchesSearch && matchesCategory;
     });
-  }, [search, category, products, getProductName]);
+  }, [search, category, products, getProductName, activeTab, favorites, selectedStores]);
+
+  const storeCounts = useMemo(() => {
+    const counts: Record<string, number> = {};
+    stores.forEach(s => {
+      counts[s.id] = products.filter(p => p.prices.some(pr => pr.storeId === s.id)).length;
+    });
+    return counts;
+  }, [products]);
 
   const handleNavigate = (tab: string) => {
     setActiveTab(tab);
@@ -146,19 +160,64 @@ const App = () => {
         )}
 
         {activeTab === "favorites" && (
-          <div className="space-y-5 animate-fade-in-up">
-            <div className="px-1">
-              <h2 className="text-xl font-display font-bold text-white">Your Favorites</h2>
-              <p className="text-xs text-muted-foreground">{filtered.length} items saved</p>
+          <div className="space-y-6 animate-fade-in-up pb-10">
+            <div className="flex items-center gap-3">
+              <div className="h-10 w-10 rounded-xl bg-primary/15 flex items-center justify-center">
+                <Heart className="h-5 w-5 text-primary" />
+              </div>
+              <div>
+                <h2 className="text-xl font-display font-bold text-white leading-none">My Favorites</h2>
+                <p className="text-[10px] text-muted-foreground mt-1">
+                  {favorites.length} saved - {selectedStores.length} stores selected
+                </p>
+              </div>
+            </div>
+
+            <SearchBar 
+              value={search} 
+              onChange={setSearch} 
+              placeholder="Search & add products to favorites..." 
+            />
+
+            <div className="space-y-3">
+              <h3 className="text-[10px] uppercase tracking-widest font-bold text-muted-foreground px-1">
+                Select Stores to Browse
+              </h3>
+              <div className="flex flex-wrap gap-2">
+                {stores.map((store) => {
+                  const isSelected = selectedStores.includes(store.id);
+                  return (
+                    <button
+                      key={store.id}
+                      onClick={() => setSelectedStores(prev => 
+                        isSelected ? prev.filter(id => id !== store.id) : [...prev, store.id]
+                      )}
+                      className={`flex items-center gap-2 px-3 py-2 rounded-xl border transition-all ${
+                        isSelected 
+                          ? "bg-primary/15 border-primary text-white shadow-lg shadow-primary/5" 
+                          : "bg-card/40 border-border/50 text-muted-foreground hover:border-primary/30"
+                      }`}
+                    >
+                      <ShoppingBasket className="h-3.5 w-3.5" />
+                      <span className="text-xs font-semibold">{store.name}</span>
+                      <span className={`text-[9px] font-bold px-1.5 py-0.5 rounded-full ${
+                        isSelected ? "bg-primary text-primary-foreground" : "bg-muted text-muted-foreground"
+                      }`}>
+                        {storeCounts[store.id] || 0}
+                      </span>
+                    </button>
+                  );
+                })}
+              </div>
             </div>
             
-            <div className="grid grid-cols-1 gap-3">
+            <div className="grid grid-cols-1 gap-3 pt-2">
               {filtered.map((product, i) => (
                 <ProductCard
                   key={product.id}
                   product={product}
                   index={i}
-                  isFavorite={true}
+                  isFavorite={favorites.includes(product.id)}
                   onToggleFavorite={() => toggleFavorite(product.id)}
                   isInBasket={basket.includes(product.id)}
                   onAddToBasket={() => setBasket(prev => 
@@ -166,14 +225,25 @@ const App = () => {
                   )}
                 />
               ))}
-              {filtered.length === 0 && (
-                <div className="flex flex-col items-center justify-center py-20 text-center space-y-4">
-                  <div className="h-16 w-16 rounded-full bg-muted flex items-center justify-center">
-                    <Heart className="h-8 w-8 text-muted-foreground" />
+
+              {(favorites.length === 0 || (selectedStores.length > 0 && filtered.length === 0)) && (
+                <div className="space-y-4 pt-4">
+                  <div className="bg-card/40 backdrop-blur-md border border-border/50 rounded-3xl p-8 flex flex-col items-center justify-center text-center space-y-4">
+                    <div className="h-12 w-12 rounded-full bg-muted flex items-center justify-center">
+                      <Heart className="h-6 w-6 text-muted-foreground/50" />
+                    </div>
+                    <p className="text-sm text-muted-foreground font-medium max-w-[200px]">
+                      Sign in to save favorites across stores.
+                    </p>
                   </div>
-                  <div>
-                    <h3 className="text-lg font-semibold text-white">No Favorites Yet</h3>
-                    <p className="text-sm text-muted-foreground">Tap the heart on any product to save it here.</p>
+
+                  <div className="bg-card/40 backdrop-blur-md border border-border/50 rounded-3xl p-8 flex flex-col items-center justify-center text-center space-y-4">
+                    <div className="h-12 w-12 rounded-full bg-muted flex items-center justify-center">
+                      <ShoppingBasket className="h-6 w-6 text-muted-foreground/50" />
+                    </div>
+                    <p className="text-sm text-muted-foreground font-medium max-w-[220px]">
+                      Select one or more stores above to browse and save products.
+                    </p>
                   </div>
                 </div>
               )}
