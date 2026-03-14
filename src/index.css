@@ -45,15 +45,18 @@
     --sidebar-border: 220 15% 18%;
     --sidebar-ring: 160 84% 44%;
     --bottom-nav: 220 20% 9%;
+    --safe-area-bottom: env(safe-area-inset-bottom, 16px);
   }
 }
 
 @layer base {
   * {
     @apply border-border;
+    -webkit-tap-highlight-color: transparent;
   }
   body {
-    @apply bg-background text-foreground font-sans;
+    @apply bg-background text-foreground font-sans overflow-x-hidden;
+    overscroll-behavior-y: none;
   }
 }
 
@@ -72,9 +75,62 @@
     scroll-snap-align: start;
   }
   .glass {
-    background: hsl(var(--card) / 0.6);
-    backdrop-filter: blur(12px) saturate(180%);
-    -webkit-backdrop-filter: blur(12px) saturate(180%);
-    border-bottom: 1px solid hsl(var(--border) / 0.5);
+    background: hsla(var(--card) / 0.7);
+    backdrop-filter: blur(20px) saturate(180%);
+    -webkit-backdrop-filter: blur(20px) saturate(180%);
+    border-bottom: 1px solid hsla(var(--border) / 0.5);
+    box-shadow: 0 4px 30px hsla(0, 0%, 0%, 0.1);
+  }
+
+  .glass-card {
+    background: hsla(var(--card) / 0.4);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    border: 1px solid hsla(var(--white) / 0.05);
+    box-shadow: 0 8px 32px hsla(0, 0%, 0%, 0.3);
+  }
+
+  .grad-primary {
+    background: linear-gradient(135deg, hsl(var(--primary)) 0%, hsl(var(--primary) / 0.8) 100%);
+  }
+
+  .animate-ripple {
+    animation: ripple 0.6s linear;
+  }
+
+  @keyframes ripple {
+    from {
+      transform: scale(0);
+      opacity: 0.5;
+    }
+    to {
+      transform: scale(4);
+      opacity: 0;
+    }
+  }
+
+  .animate-float {
+    animation: float 3s ease-in-out infinite;
+  }
+
+  @keyframes float {
+    0%, 100% { transform: translateY(0); }
+    50% { transform: translateY(-10px); }
+  }
+
+  .shimmer {
+    background: linear-gradient(
+      90deg,
+      transparent 0%,
+      hsla(var(--foreground) / 0.05) 50%,
+      transparent 100%
+    );
+    background-size: 200% 100%;
+    animation: shimmer 2s infinite;
+  }
+
+  @keyframes shimmer {
+    0% { background-position: -200% 0; }
+    100% { background-position: 200% 0; }
   }
 }

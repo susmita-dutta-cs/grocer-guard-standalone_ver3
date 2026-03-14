@@ -25,67 +25,78 @@ const ProductCard = ({ product, index, onView, isFavorite, onToggleFavorite, isI
   return (
     <div
       onClick={onView}
-      className={`bg-card/40 backdrop-blur-md rounded-2xl border p-4 shadow-sm hover:border-primary/50 transition-all animate-fade-in-up cursor-pointer active:scale-[0.98] group ${
-        isFavorite ? "border-primary/20" : "border-border"
+      className={`relative bg-card/30 backdrop-blur-md rounded-[24px] border border-white/5 p-4 transition-all duration-300 active:scale-[0.96] cursor-pointer overflow-hidden group shadow-lg ${
+        isFavorite ? "bg-primary/5 ring-1 ring-primary/20" : ""
       }`}
-      style={{ animationDelay: `${index * 40}ms` }}
+      style={{ animationDelay: `${index * 30}ms` }}
     >
-      <div className="flex items-center gap-3">
-        <div className="h-12 w-12 rounded-xl bg-muted flex items-center justify-center text-2xl shrink-0">
+      {/* Ripple background effect for touch */}
+      <div className="absolute inset-0 bg-primary/0 group-active:bg-primary/5 transition-colors pointer-events-none" />
+      
+      <div className="flex items-center gap-4 relative z-10">
+        <div className="h-14 w-14 rounded-2xl bg-white/5 flex items-center justify-center text-3xl shrink-0 group-hover:scale-105 transition-transform duration-500 shadow-inner">
           {product.image}
         </div>
-        <div className="flex-1 min-w-0">
-          <h3 className="font-display font-semibold text-sm text-card-foreground leading-tight truncate">
-            {translatedName}
-          </h3>
+        
+        <div className="flex-1 min-w-0 flex flex-col gap-0.5">
+          <div className="flex items-center gap-2">
+            <h3 className="font-display font-bold text-[15px] text-white leading-tight truncate">
+              {translatedName}
+            </h3>
+            {savings > 15 && (
+              <span className="flex items-center gap-0.5 bg-primary/20 text-primary text-[9px] font-black px-1.5 py-0.5 rounded-md uppercase tracking-tighter">
+                BEST
+              </span>
+            )}
+          </div>
+          
           {product.brand && (
-            <p className="text-[10px] text-primary/70 font-medium mt-0.5">{product.brand}</p>
+            <p className="text-[10px] text-primary/60 font-black uppercase tracking-widest">{product.brand}</p>
           )}
-          <div className="flex items-center gap-2 mt-1">
-            <span className="text-xs font-display font-bold text-primary">
+          
+          <div className="flex items-baseline gap-2 mt-1">
+            <span className="text-lg font-display font-black text-white">
               €{lowest.price.toFixed(2)}
             </span>
-            <span className="text-[10px] text-muted-foreground">
-              at {lowestStore?.name}
-            </span>
-            <span className="text-[10px] text-muted-foreground ml-auto">
-              {translatedUnit}
+            <span className="text-[10px] text-muted-foreground/60 font-medium">
+              at {lowestStore?.name} • {translatedUnit}
             </span>
           </div>
         </div>
-        <div className="flex flex-col items-end gap-1.5 shrink-0">
+
+        <div className="flex flex-col items-end gap-3 shrink-0">
           <div className="flex items-center gap-1">
             {onToggleFavorite && (
               <button
                 onClick={(e) => { e.stopPropagation(); onToggleFavorite(); }}
-                className="p-1.5 rounded-lg hover:bg-muted transition-colors"
+                className="p-2 rounded-xl bg-white/5 active:bg-white/10 transition-all active:scale-90"
               >
                 <Heart
-                  className={`h-4 w-4 transition-colors ${isFavorite ? "fill-primary text-primary" : "text-muted-foreground"}`}
+                  className={`h-4 w-4 transition-all ${isFavorite ? "fill-primary text-primary scale-110" : "text-muted-foreground/40"}`}
                 />
               </button>
             )}
-          </div>
-          <div className="flex flex-col items-end gap-2">
+            
             {onAddToBasket && (
               <button
                 onClick={(e) => { e.stopPropagation(); onAddToBasket(); }}
-                className={`h-8 w-8 rounded-full flex items-center justify-center transition-all ${
+                className={`h-9 w-9 rounded-xl flex items-center justify-center transition-all active:scale-75 ${
                   isInBasket 
-                    ? "bg-primary text-primary-foreground scale-110 shadow-lg shadow-primary/20" 
-                    : "bg-muted text-muted-foreground hover:bg-primary/20 hover:text-primary"
+                    ? "bg-primary text-primary-foreground shadow-lg shadow-primary/20 rotate-0" 
+                    : "bg-white/5 text-muted-foreground hover:bg-primary/20 hover:text-primary"
                 }`}
               >
-                {isInBasket ? <Check className="h-4 w-4" /> : <Plus className="h-4 w-4" />}
+                {isInBasket ? <Check className="h-4.5 w-4.5 stroke-[3px]" /> : <Plus className="h-4.5 w-4.5 stroke-[3px]" />}
               </button>
             )}
-            {savings > 10 && (
-              <span className="flex items-center gap-0.5 bg-primary/15 text-primary text-[10px] font-bold px-2 py-0.5 rounded-full">
-                <TrendingDown className="h-3 w-3" />
-                {savings}%
-              </span>
-            )}
           </div>
+          
+          {savings > 5 && (
+            <div className="flex items-center gap-1 bg-primary/10 text-primary text-[10px] font-black px-2 py-0.5 rounded-full ring-1 ring-primary/20">
+              <TrendingDown className="h-3 w-3" />
+              {savings}%
+            </div>
+          )}
         </div>
       </div>
     </div>

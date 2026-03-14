@@ -97,23 +97,29 @@ const App = () => {
   }
 
   return (
-    <div className="min-h-screen bg-background pb-20 font-sans">
-      <header className="glass border-b border-border sticky top-0 z-40">
-        <div className="max-w-lg mx-auto px-4 py-3 flex items-center gap-3">
-          <div className="h-9 w-9 rounded-xl bg-primary/15 flex items-center justify-center">
-            <ShoppingBasket className="h-5 w-5 text-primary" />
+    <div className="min-h-screen bg-background pb-24 font-sans relative overflow-hidden">
+      {/* Premium Background Accents */}
+      <div className="fixed top-0 left-0 w-full h-full pointer-events-none z-0">
+        <div className="absolute top-[-10%] right-[-10%] w-[80%] h-[50%] bg-primary/5 rounded-full blur-[120px] animate-pulse" />
+        <div className="absolute bottom-[-10%] left-[-10%] w-[80%] h-[50%] bg-blue-500/5 rounded-full blur-[120px] animate-pulse" style={{ animationDelay: '2s' }} />
+      </div>
+
+      <header className="glass border-b border-white/5 sticky top-0 z-40 px-4">
+        <div className="max-w-lg mx-auto py-4 flex items-center gap-3">
+          <div className="h-10 w-10 rounded-2xl bg-primary/10 flex items-center justify-center shadow-inner">
+            <ShoppingBasket className="h-6 w-6 text-primary" />
           </div>
           <div className="flex-1">
-            <h1 className="font-display font-bold text-base text-white">ShelfSmart</h1>
-            <p className="text-[10px] text-muted-foreground">{t("app.tagline")}</p>
+            <h1 className="font-display font-black text-xl text-white tracking-tight leading-none">ShelfSmart</h1>
+            <p className="text-[10px] text-muted-foreground/60 font-medium uppercase tracking-widest mt-1">{t("app.tagline")}</p>
           </div>
-          <div className="h-8 w-8 rounded-full bg-muted flex items-center justify-center">
-            <Sparkles className="h-4 w-4 text-primary" />
+          <div className="h-9 w-9 rounded-xl bg-white/5 flex items-center justify-center transition-transform active:scale-90">
+            <Sparkles className="h-5 w-5 text-primary animate-float" />
           </div>
         </div>
       </header>
 
-      <main className="max-w-lg mx-auto px-4 py-4 space-y-5">
+      <main className="max-w-lg mx-auto px-4 py-6 space-y-6 relative z-10">
         {activeTab === "home" && (
           selectedProduct ? (
             <ProductDetail

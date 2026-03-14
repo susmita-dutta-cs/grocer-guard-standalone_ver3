@@ -29,8 +29,8 @@ const BottomNav = ({ active, onNavigate, basketCount = 0, favoritesCount = 0 }: 
   const tabs = ["home", "favorites", "basket", "settings", "admin"] as const;
 
   return (
-    <nav className="fixed bottom-0 left-0 right-0 z-50 glass border-t border-border">
-      <div className="flex items-center justify-around h-16 max-w-lg mx-auto px-2">
+    <nav className="fixed bottom-0 left-0 right-0 z-50 glass border-t border-white/5 pt-1 pb-[var(--safe-area-bottom)]">
+      <div className="flex items-center justify-around h-16 max-w-lg mx-auto px-4">
         {tabs.map((id) => {
           const isActive = active === id;
           const Icon = tabIcons[id];
@@ -38,27 +38,29 @@ const BottomNav = ({ active, onNavigate, basketCount = 0, favoritesCount = 0 }: 
             <button
               key={id}
               onClick={() => onNavigate(id)}
-              className={`relative flex flex-col items-center justify-center gap-0.5 flex-1 h-full transition-all ${
-                isActive ? "text-primary" : "text-muted-foreground"
+              className={`relative flex flex-col items-center justify-center gap-1 flex-1 h-full transition-all duration-300 active:scale-90 ${
+                isActive ? "text-primary" : "text-muted-foreground hover:text-white/60"
               }`}
             >
-              {isActive && (
-                <span className="absolute top-0 left-1/2 -translate-x-1/2 w-8 h-0.5 bg-primary rounded-full" />
-              )}
-              <div className="relative">
-                <Icon className={`h-5 w-5 transition-transform ${isActive ? "scale-110" : ""}`} />
-                {id === "favorites" && favoritesCount > 0 && (
-                  <span className="absolute -top-1.5 -right-2 bg-primary text-primary-foreground text-[9px] font-bold min-w-[16px] h-4 rounded-full flex items-center justify-center px-1">
+              <div className="relative flex items-center justify-center">
+                {isActive && (
+                  <div className="absolute inset-0 -m-3 bg-primary/10 blur-xl rounded-full animate-pulse" />
+                )}
+                <div className={`relative p-2 rounded-2xl transition-all duration-300 ${isActive ? "bg-primary/10 shadow-lg shadow-primary/5" : ""}`}>
+                  <Icon className={`h-5 w-5 transition-all duration-300 ${isActive ? "scale-110 stroke-[2.5px]" : "stroke-[2px]"}`} />
+                </div>
+                {(id === "favorites" && favoritesCount > 0) && (
+                  <span className="absolute -top-1 -right-1 bg-primary text-primary-foreground text-[8px] font-black min-w-[14px] h-3.5 rounded-full flex items-center justify-center ring-2 ring-background">
                     {favoritesCount}
                   </span>
                 )}
-                {id === "basket" && basketCount > 0 && (
-                  <span className="absolute -top-1.5 -right-2 bg-primary text-primary-foreground text-[9px] font-bold min-w-[16px] h-4 rounded-full flex items-center justify-center px-1">
+                {(id === "basket" && basketCount > 0) && (
+                  <span className="absolute -top-1 -right-1 bg-primary text-primary-foreground text-[8px] font-black min-w-[14px] h-3.5 rounded-full flex items-center justify-center ring-2 ring-background">
                     {basketCount}
                   </span>
                 )}
               </div>
-              <span className={`text-[10px] font-medium ${isActive ? "text-primary" : ""}`}>
+              <span className={`text-[9px] font-black uppercase tracking-tighter transition-all duration-300 ${isActive ? "text-primary opacity-100 translate-y-0" : "opacity-0 translate-y-1"}`}>
                 {t(tabKeys[id])}
               </span>
             </button>
