@@ -3,9 +3,9 @@ import { createContext, useContext, useState } from "react";
 const translations = {
   en: {
     "app.tagline": "Save up to 40% on your weekly groceries",
-    "hero.title1": "ShelfSmart",
-    "hero.title2": "Track Prices. Catch Deals. Save More.",
-    "hero.subtitle": "Compare prices across all Belgian supermarkets in real-time.",
+    "hero.title1": "Track Prices.",
+    "hero.title2": "Catch Deals.",
+    "hero.subtitle": "Save More.",
     "search.placeholder": "Search for products...",
     "nav.home": "Home",
     "nav.basket": "Basket",
@@ -16,9 +16,9 @@ const translations = {
   },
   nl: {
     "app.tagline": "Bespaar tot 40% op je wekelijkse boodschappen",
-    "hero.title1": "ShelfSmart",
-    "hero.title2": "Track Prices. Catch Deals. Save More.",
-    "hero.subtitle": "Vergelijk prijzen van alle Belgische supermarkten in real-time.",
+    "hero.title1": "Track Prices.",
+    "hero.title2": "Catch Deals.",
+    "hero.subtitle": "Save More.",
     "search.placeholder": "Zoek naar producten...",
     "nav.home": "Home",
     "nav.basket": "Mandje",
