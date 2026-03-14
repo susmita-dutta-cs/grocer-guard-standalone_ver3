@@ -6,6 +6,7 @@ interface BottomNavProps {
   onNavigate: (tab: string) => void;
   basketCount?: number;
   favoritesCount?: number;
+  isAdmin?: boolean;
 }
 
 const tabIcons = {
@@ -24,9 +25,9 @@ const tabKeys: Record<string, string> = {
   admin: "nav.admin",
 };
 
-const BottomNav = ({ active, onNavigate, basketCount = 0, favoritesCount = 0 }: BottomNavProps) => {
+const BottomNav = ({ active, onNavigate, basketCount = 0, favoritesCount = 0, isAdmin = false }: BottomNavProps) => {
   const { t } = useI18n();
-  const tabs = ["home", "favorites", "basket", "settings", "admin"] as const;
+  const tabs = ["home", "favorites", "basket", "settings", (isAdmin ? "admin" : null)].filter(Boolean) as string[];
 
   return (
     <nav className="fixed bottom-0 left-0 right-0 z-50 glass border-t border-white/5 pt-1 pb-[var(--safe-area-bottom)]">
