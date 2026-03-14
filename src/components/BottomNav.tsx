@@ -18,10 +18,10 @@ const tabIcons = {
 
 const tabKeys: Record<string, string> = {
   home: "nav.home",
-  favorites: "Favorites",
+  favorites: "nav.favorites",
   basket: "nav.basket",
   settings: "nav.settings",
-  admin: "Admin",
+  admin: "nav.admin",
 };
 
 const BottomNav = ({ active, onNavigate, basketCount = 0, favoritesCount = 0 }: BottomNavProps) => {

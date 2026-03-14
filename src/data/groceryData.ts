@@ -24,7 +24,7 @@ export type Product = {
 
 export const stores: Store[] = [
   { id: "aldi", name: "Aldi", colorClass: "bg-store-1" },
-  { id: "albert_heijn", name: "Albert Heijn", colorClass: "bg-store-2" },
+  { id: "albert-heijn", name: "Albert Heijn", colorClass: "bg-store-2" },
   { id: "carrefour", name: "Carrefour", colorClass: "bg-store-3" },
   { id: "colruyt", name: "Colruyt", colorClass: "bg-store-4" },
   { id: "jumbo", name: "Jumbo", colorClass: "bg-store-5" },

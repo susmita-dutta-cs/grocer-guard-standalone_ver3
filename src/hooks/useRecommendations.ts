@@ -111,11 +111,11 @@ function getDealsAndTrending(allProducts: Product[], count = 4): Recommendation[
       const salePrice = p.prices.find((pp) => pp.onSale)!;
       const highest = getHighestPrice(p).price;
       const discount = Math.round(((highest - salePrice.price) / highest) * 100);
-      const store = stores.find((s) => s.id === salePrice.storeId)!;
+      const store = stores.find((s) => s.id === salePrice.storeId);
       return {
         product: p,
         reason: "deal_trending" as const,
-        label: `${store.name} — €${salePrice.price.toFixed(2)}`,
+        label: `${store?.name || "Store"} — €${salePrice.price.toFixed(2)}`,
         score: discount,
       };
     })
