@@ -183,17 +183,24 @@ async function main() {
 
     let matchedCount = 0;
     for (const promo of allStoresPromotions) {
-      const product = db.products.find(p => 
-        p.name.toLowerCase().includes(promo.product_name.toLowerCase()) ||
-        promo.product_name.toLowerCase().includes(p.name.toLowerCase())
-      );
+      const promoWords = promo.product_name.toLowerCase().split(/\s+/).filter(w => w.length > 2);
+      const product = db.products.find(p => {
+        const pName = p.name.toLowerCase();
+        const matchesBrand = promo.brand && pName.includes(promo.brand.toLowerCase());
+        const matchesWords = promoWords.some(word => pName.includes(word));
+        return matchesBrand || matchesWords;
+      });
       if (product) {
         matchedCount++;
         const storePrice = product.prices.find(pr => pr.storeId === promo.store);
         if (storePrice) {
           storePrice.price = promo.promo_price || storePrice.price;
           storePrice.onSale = true;
-          storePrice.promo_details = { discount_type: promo.discount_type, valid_until: promo.valid_until };
+          storePrice.promo_details = { 
+            discount_type: promo.discount_type, 
+            valid_until: promo.valid_until,
+            original_product_name: promo.product_name 
+          };
         }
       }
     }

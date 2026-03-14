@@ -1,5 +1,5 @@
 import { useState, useMemo } from "react";
-import { ShoppingBasket, Sparkles, RefreshCcw } from "lucide-react";
+import { ShoppingBasket, Sparkles, RefreshCcw, Heart } from "lucide-react";
 import heroImage from "./assets/hero-groceries.png";
 import SearchBar from "./components/SearchBar";
 import CategoryFilter from "./components/CategoryFilter";
@@ -9,24 +9,31 @@ import AdminTab from "./components/AdminTab";
 import BasketTab from "./components/BasketTab";
 import SettingsTab from "./components/SettingsTab";
 import AuthScreen from "./components/AuthScreen";
+import ProductDetail from "./components/ProductDetail";
+import RecommendationRow from "./components/RecommendationRow";
 import { useGroceryData } from "./hooks/useGroceryData";
-import { useI18n, categoryKeyMap } from "./hooks/useI18n";
+import { useI18n } from "./hooks/useI18n";
 import { useProductName } from "./hooks/useProductName";
 import { useFavorites } from "./hooks/useFavorites";
-import { Store, stores } from "./data/groceryData";
+import { useRecommendations } from "./hooks/useRecommendations";
+import { stores } from "./data/groceryData";
+import type { Product } from "./data/groceryData";
 
 
 const App = () => {
   const [search, setSearch] = useState("");
   const [category, setCategory] = useState("All");
   const [selectedStores, setSelectedStores] = useState<string[]>([]);
-  const [activeTab, setActiveTab] = useState("home");
+  const [activeTab, setActiveTab] = useState<string>("home");
+  const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
   const [user, setUser] = useState<string | null>(() => localStorage.getItem("shelfsmart_user"));
+  
   const { products, setProducts, isLoading, getStats } = useGroceryData();
   const [basket, setBasket] = useState<string[]>([]);
   const { t } = useI18n();
   const { getProductName } = useProductName();
   const { isFavorite, toggleFavorite, favoritesCount, favorites } = useFavorites();
+  const { bestValue, deals, personalized, trackView, getSmartBasket } = useRecommendations();
   const stats = getStats();
 
   const filtered = useMemo(() => {
@@ -58,7 +65,18 @@ const App = () => {
 
   const handleNavigate = (tab: string) => {
     setActiveTab(tab);
+    setSelectedProduct(null);
   };
+
+  const handleProductSelect = (product: Product) => {
+    trackView(product.id);
+    setSelectedProduct(product);
+  };
+
+  const relatedProducts = useMemo(() => {
+    if (!selectedProduct) return [];
+    return products.filter(p => p.category === selectedProduct.category && p.id !== selectedProduct.id);
+  }, [selectedProduct, products]);
 
   const handleLogin = (email: string) => {
     localStorage.setItem("shelfsmart_user", email);
@@ -97,66 +115,112 @@ const App = () => {
 
       <main className="max-w-lg mx-auto px-4 py-4 space-y-5">
         {activeTab === "home" && (
+          selectedProduct ? (
+            <ProductDetail
+              product={selectedProduct}
+              relatedProducts={relatedProducts}
+              onBack={() => setSelectedProduct(null)}
+              isFavorite={isFavorite}
+              onToggleFavorite={toggleFavorite}
+            />
+          ) : (
           <>
-            <section className="relative bg-gradient-to-br from-primary/15 via-card to-card rounded-2xl border border-border overflow-hidden p-5">
-              <div className="flex items-center gap-4">
-                <div className="flex-1 space-y-2">
-                  <h2 className="font-display font-extrabold text-2xl text-white leading-tight">
-                    {t("hero.title1")}
-                    <br />
-                    <span className="text-primary">{t("hero.title2")}</span>
-                  </h2>
-                  <p className="text-muted-foreground text-xs">{t("hero.subtitle")}</p>
-                </div>
-                <img src={heroImage} alt="Fresh groceries" className="w-24 h-24 rounded-lg object-cover opacity-90 shadow-2xl" />
-              </div>
-            </section>
-            <section className="grid grid-cols-3 gap-3">
-              <div className="bg-card/50 border border-border p-3 rounded-2xl flex flex-col items-center justify-center text-center">
-                <span className="text-primary font-bold text-lg">{stats.total}</span>
-                <span className="text-[10px] text-muted-foreground uppercase tracking-wider font-semibold">Products</span>
-              </div>
-              <div className="bg-card/50 border border-border p-3 rounded-2xl flex flex-col items-center justify-center text-center">
-                <span className="text-primary font-bold text-lg">€{(stats.avgSavings / 100).toFixed(2)}</span>
-                <span className="text-[10px] text-muted-foreground uppercase tracking-wider font-semibold">Avg. Savings</span>
-              </div>
-              <div className="bg-card/50 border border-border p-3 rounded-2xl flex flex-col items-center justify-center text-center">
-                <span className="text-primary font-bold text-lg">€{stats.totalPotentialSavings.toFixed(0)}</span>
-                <span className="text-[10px] text-muted-foreground uppercase tracking-wider font-semibold">Total Potential</span>
+            <section className="relative h-48 rounded-3xl overflow-hidden group shadow-2xl">
+              <img src={heroImage} alt="Hero" className="absolute inset-0 w-full h-full object-cover transition-transform duration-700 group-hover:scale-110" />
+              <div className="absolute inset-0 bg-gradient-to-t from-black via-black/40 to-transparent flex flex-col justify-end p-6">
+                <span className="text-[10px] font-black uppercase tracking-[0.2em] text-primary mb-1 drop-shadow-md">Active Tracking</span>
+                <h2 className="text-3xl font-display font-black text-white leading-[0.9] drop-shadow-xl uppercase italic">
+                  {t("hero.title1")}
+                  <br />
+                  <span className="text-primary">{t("hero.title2")}</span>
+                  <br />
+                  <span className="text-white/60 text-lg normal-case">{t("hero.subtitle")}</span>
+                </h2>
               </div>
             </section>
 
             <SearchBar value={search} onChange={setSearch} />
 
-            <CategoryFilter selected={category} onSelect={setCategory} />
-
-            <div className="flex items-center justify-between px-1">
-              <h3 className="font-display font-bold text-sm text-white">Hot Deals & Trending</h3>
-              <Sparkles className="h-4 w-4 text-primary" />
-            </div>
-
-            <div className="grid grid-cols-1 gap-3">
-              {filtered.map((product, i) => (
-                <ProductCard
-                  key={product.id}
-                  product={product}
-                  index={i}
-                  isFavorite={isFavorite(product.id)}
-                  onToggleFavorite={() => toggleFavorite(product.id)}
-                  isInBasket={basket.includes(product.id)}
-                  onAddToBasket={() => setBasket(prev => 
-                    prev.includes(product.id) ? prev.filter(id => id !== product.id) : [...prev, product.id]
-                  )}
-                />
-              ))}
-              {filtered.length === 0 && (
-                <div className="flex flex-col items-center justify-center py-12 text-center">
-                  <ShoppingBasket className="h-12 w-12 text-muted-foreground/20 mb-3" />
-                  <p className="text-sm text-muted-foreground">No deals found for "{search}"</p>
+            {search.trim() ? (
+              <div className="space-y-3">
+                {filtered.map((product, i) => (
+                  <ProductCard
+                    key={product.id}
+                    product={product}
+                    index={i}
+                    onView={() => handleProductSelect(product)}
+                    isFavorite={isFavorite(product.id)}
+                    onToggleFavorite={() => toggleFavorite(product.id)}
+                    isInBasket={basket.includes(product.id)}
+                    onAddToBasket={() => setBasket(prev => 
+                      prev.includes(product.id) ? prev.filter(id => id !== product.id) : [...prev, product.id]
+                    )}
+                  />
+                ))}
+              </div>
+            ) : (
+              <>
+                <div className="grid grid-cols-3 gap-3">
+                  <div className="bg-card/40 backdrop-blur-md rounded-2xl p-3 border border-border/50 shadow-lg">
+                    <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground mb-1">Items</p>
+                    <p className="text-xl font-display font-black text-white leading-none">{stats.total}</p>
+                  </div>
+                  <div className="bg-card/40 backdrop-blur-md rounded-2xl p-3 border border-border/50 shadow-lg">
+                    <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground mb-1">Avg Sav</p>
+                    <p className="text-xl font-display font-black text-primary leading-none">{stats.avgSavings}%</p>
+                  </div>
+                  <div className="bg-card/40 backdrop-blur-md rounded-2xl p-3 border border-border/50 shadow-lg">
+                    <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground mb-1">Pot Sav</p>
+                    <p className="text-xl font-display font-black text-white leading-none">€{stats.totalPotentialSavings}</p>
+                  </div>
                 </div>
-              )}
-            </div>
+
+                <RecommendationRow
+                  recommendations={deals}
+                  reason="deal_trending"
+                  onView={(id) => handleProductSelect(products.find(p => p.id === id)!)}
+                />
+
+                <RecommendationRow
+                  recommendations={bestValue}
+                  reason="best_value"
+                  onView={(id) => handleProductSelect(products.find(p => p.id === id)!)}
+                />
+
+                {personalized.length > 0 && (
+                  <RecommendationRow
+                    recommendations={personalized}
+                    reason="personalized"
+                    onView={(id) => handleProductSelect(products.find(p => p.id === id)!)}
+                  />
+                )}
+
+                <CategoryFilter selected={category} onSelect={setCategory} />
+
+                <div className="flex items-center justify-between px-1">
+                  <h3 className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Trending & Hot Deals</h3>
+                </div>
+
+                <div className="grid grid-cols-1 gap-3 pb-4">
+                  {filtered.slice(0, 50).map((product, i) => (
+                    <ProductCard
+                      key={product.id}
+                      product={product}
+                      index={i}
+                      onView={() => handleProductSelect(product)}
+                      isFavorite={isFavorite(product.id)}
+                      onToggleFavorite={() => toggleFavorite(product.id)}
+                      isInBasket={basket.includes(product.id)}
+                      onAddToBasket={() => setBasket(prev => 
+                        prev.includes(product.id) ? prev.filter(id => id !== product.id) : [...prev, product.id]
+                      )}
+                    />
+                  ))}
+                </div>
+              </>
+            )}
           </>
+          )
         )}
 
         {activeTab === "favorites" && (
@@ -254,7 +318,8 @@ const App = () => {
         {activeTab === "basket" && (
           <BasketTab 
             items={products.filter(p => basket.includes(p.id))} 
-            onRemove={(id) => setBasket(prev => prev.filter(iid => iid !== id))} 
+            onRemove={(id: string) => setBasket(prev => prev.filter(iid => iid !== id))} 
+            itemsByStore={getSmartBasket(basket)}
           />
         )}
 

@@ -287,8 +287,13 @@
         },
         {
           "storeId": "albert-heijn",
-          "price": 2.74,
-          "onSale": false
+          "price": 0.99,
+          "onSale": true,
+          "promo_details": {
+            "discount_type": null,
+            "valid_until": null,
+            "original_product_name": "AH Mini krieltjes"
+          }
         },
         {
           "storeId": "carrefour",
@@ -14738,7 +14743,12 @@
         {
           "storeId": "delhaize",
           "price": 4.22,
-          "onSale": false
+          "onSale": true,
+          "promo_details": {
+            "discount_type": "2 producten = gratis levering",
+            "valid_until": null,
+            "original_product_name": "fleuril White & Light Wasmiddel/Levensmiddel"
+          }
         }
       ]
     },
@@ -24877,8 +24887,13 @@
         },
         {
           "storeId": "delhaize",
-          "price": 6.86,
-          "onSale": false
+          "price": 3.89,
+          "onSale": true,
+          "promo_details": {
+            "discount_type": "1+1 GRATIS",
+            "valid_until": null,
+            "original_product_name": "Gevulde pasta Ravioli con Ricotta e Spinaci"
+          }
         }
       ]
     },
@@ -26373,11 +26388,12 @@
       "prices": [
         {
           "storeId": "aldi",
-          "price": 2.37,
+          "price": 2.99,
           "onSale": true,
           "promo_details": {
             "discount_type": null,
-            "valid_until": "2023-03-21"
+            "valid_until": "2023-03-21",
+            "original_product_name": "Avocado"
           }
         },
         {
@@ -34007,8 +34023,13 @@
         },
         {
           "storeId": "delhaize",
-          "price": 6.85,
-          "onSale": false
+          "price": 3.29,
+          "onSale": true,
+          "promo_details": {
+            "discount_type": "1+1 GRATIS",
+            "valid_until": null,
+            "original_product_name": "Kerstomaten Mix 400 g of rode (500 g)"
+          }
         }
       ]
     },
@@ -55280,7 +55301,8 @@
           "onSale": true,
           "promo_details": {
             "discount_type": "-24%",
-            "valid_until": "2023-03-21"
+            "valid_until": "2023-03-21",
+            "original_product_name": "Courgettes"
           }
         },
         {
@@ -57841,7 +57863,12 @@
         {
           "storeId": "delhaize",
           "price": 4.43,
-          "onSale": false
+          "onSale": true,
+          "promo_details": {
+            "discount_type": "2 producten = gratis levering",
+            "valid_until": null,
+            "original_product_name": "Coca-Cola Zero Sugar Zero Caffeine"
+          }
         }
       ]
     },
@@ -58854,8 +58881,13 @@
         },
         {
           "storeId": "delhaize",
-          "price": 6.46,
-          "onSale": false
+          "price": 3.89,
+          "onSale": true,
+          "promo_details": {
+            "discount_type": "1+1 GRATIS",
+            "valid_until": null,
+            "original_product_name": "Gevulde pasta Funghi Mushroom"
+          }
         }
       ]
     },
@@ -84072,8 +84104,13 @@
         },
         {
           "storeId": "carrefour",
-          "price": 7.06,
-          "onSale": true
+          "price": 12.7,
+          "onSale": true,
+          "promo_details": {
+            "discount_type": "2+1 gratis",
+            "valid_until": "2026-03-30",
+            "original_product_name": "Cosynel Giga Roll"
+          }
         },
         {
           "storeId": "colruyt",
@@ -108652,8 +108689,13 @@
         },
         {
           "storeId": "lidl",
-          "price": 8.69,
-          "onSale": false
+          "price": 1.99,
+          "onSale": true,
+          "promo_details": {
+            "discount_type": null,
+            "valid_until": "2023-10-11",
+            "original_product_name": "San Francisco style desembrood"
+          }
         },
         {
           "storeId": "delhaize",
@@ -121527,8 +121569,13 @@
         },
         {
           "storeId": "delhaize",
-          "price": 9.1,
-          "onSale": false
+          "price": 3.89,
+          "onSale": true,
+          "promo_details": {
+            "discount_type": "1+1 GRATIS",
+            "valid_until": null,
+            "original_product_name": "Gevulde pasta Bertagni Tortellini champignon of rauwe ham"
+          }
         }
       ]
     },
@@ -145079,7 +145126,12 @@
         {
           "storeId": "lidl",
           "price": 6.66,
-          "onSale": false
+          "onSale": true,
+          "promo_details": {
+            "discount_type": "2e aan -50%",
+            "valid_until": "2024-03-21",
+            "original_product_name": "Barchetta met ham"
+          }
         },
         {
           "storeId": "delhaize",
@@ -195010,5 +195062,5 @@
     }
   ],
   "generated_at": "2026-03-14T19:38:46.149Z",
-  "scraped_at": "2026-03-14T20:46:43.073Z"
+  "scraped_at": "2026-03-14T21:45:55.457Z"
 }
