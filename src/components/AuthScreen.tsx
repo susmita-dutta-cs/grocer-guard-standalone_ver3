@@ -103,8 +103,6 @@ const AuthScreen = ({ onLogin }: AuthScreenProps) => {
         </div>
       </div>
     </div>
-      </div>
-    </div>
   );
 };
 
