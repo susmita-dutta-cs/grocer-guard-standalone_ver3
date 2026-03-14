@@ -30,6 +30,8 @@ const App = () => {
   
   const { products, setProducts, isLoading, getStats } = useGroceryData();
   const [basket, setBasket] = useState<string[]>([]);
+  const [basketSearch, setBasketSearch] = useState("");
+  const [basketCategory, setBasketCategory] = useState("All");
   const { t } = useI18n();
   const { getProductName } = useProductName();
   const { isFavorite, toggleFavorite, favoritesCount, favorites } = useFavorites();
@@ -176,8 +178,8 @@ const App = () => {
                     <p className="text-xl font-display font-black text-primary leading-none">{stats.avgSavings}%</p>
                   </div>
                   <div className="bg-card/40 backdrop-blur-md rounded-2xl p-3 border border-border/50 shadow-lg">
-                    <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground mb-1">Pot Sav</p>
-                    <p className="text-xl font-display font-black text-white leading-none">€{stats.totalPotentialSavings}</p>
+                    <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground mb-1">Total Savings</p>
+                    <p className="text-lg font-display font-black text-white leading-none">€{(stats.totalPotentialSavings || 0).toFixed(2)}</p>
                   </div>
                 </div>
 
@@ -324,8 +326,14 @@ const App = () => {
         {activeTab === "basket" && (
           <BasketTab 
             items={products.filter(p => basket.includes(p.id))} 
-            onRemove={(id: string) => setBasket(prev => prev.filter(iid => iid !== id))} 
+            onRemove={(id) => setBasket(prev => prev.filter(x => x !== id))}
+            onAdd={(id) => setBasket(prev => [...prev, id])}
             itemsByStore={getSmartBasket(basket)}
+            allProducts={products}
+            search={basketSearch}
+            setSearch={setBasketSearch}
+            category={basketCategory}
+            setCategory={setBasketCategory}
           />
         )}
 
