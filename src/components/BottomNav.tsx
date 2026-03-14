@@ -39,7 +39,7 @@ const BottomNav = ({ active, onNavigate, basketCount = 0, favoritesCount = 0 }: 
               key={id}
               id={`nav-tab-${id}`}
               onClick={() => onNavigate(id)}
-              className={`relative flex flex-col items-center justify-center gap-1 flex-1 h-full transition-all duration-300 active:scale-95 touch-none select-none ${
+              className={`relative flex flex-col items-center justify-center gap-1 flex-1 h-full transition-all duration-300 active:scale-95 touch-manipulation select-none ${
                 isActive ? "text-primary" : "text-muted-foreground hover:text-white/60"
               }`}
             >
