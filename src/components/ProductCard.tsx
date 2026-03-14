@@ -1,5 +1,5 @@
 import { Product, stores, getLowestPrice, getSavingsPercent } from "../data/groceryData";
-import { TrendingDown, Heart } from "lucide-react";
+import { TrendingDown, Heart, Plus, Check } from "lucide-react";
 import { useI18n } from "../hooks/useI18n";
 import { useProductName } from "../hooks/useProductName";
 
@@ -9,9 +9,11 @@ interface ProductCardProps {
   onView?: () => void;
   isFavorite?: boolean;
   onToggleFavorite?: () => void;
+  isInBasket?: boolean;
+  onAddToBasket?: () => void;
 }
 
-const ProductCard = ({ product, index, onView, isFavorite, onToggleFavorite }: ProductCardProps) => {
+const ProductCard = ({ product, index, onView, isFavorite, onToggleFavorite, isInBasket, onAddToBasket }: ProductCardProps) => {
   const { t } = useI18n();
   const { getProductName } = useProductName();
   const translatedName = getProductName(product);
@@ -23,7 +25,9 @@ const ProductCard = ({ product, index, onView, isFavorite, onToggleFavorite }: P
   return (
     <div
       onClick={onView}
-      className="bg-card rounded-2xl border border-border p-4 shadow-sm hover:border-primary/30 transition-all animate-fade-in-up cursor-pointer active:scale-[0.98]"
+      className={`bg-card/40 backdrop-blur-md rounded-2xl border p-4 shadow-sm hover:border-primary/50 transition-all animate-fade-in-up cursor-pointer active:scale-[0.98] group ${
+        isFavorite ? "border-primary/20" : "border-border"
+      }`}
       style={{ animationDelay: `${index * 40}ms` }}
     >
       <div className="flex items-center gap-3">
@@ -62,12 +66,26 @@ const ProductCard = ({ product, index, onView, isFavorite, onToggleFavorite }: P
               </button>
             )}
           </div>
-          {savings > 10 && (
-            <span className="flex items-center gap-0.5 bg-primary/15 text-primary text-[10px] font-bold px-2 py-0.5 rounded-full">
-              <TrendingDown className="h-3 w-3" />
-              {savings}%
-            </span>
-          )}
+          <div className="flex flex-col items-end gap-2">
+            {onAddToBasket && (
+              <button
+                onClick={(e) => { e.stopPropagation(); onAddToBasket(); }}
+                className={`h-8 w-8 rounded-full flex items-center justify-center transition-all ${
+                  isInBasket 
+                    ? "bg-primary text-primary-foreground scale-110 shadow-lg shadow-primary/20" 
+                    : "bg-muted text-muted-foreground hover:bg-primary/20 hover:text-primary"
+                }`}
+              >
+                {isInBasket ? <Check className="h-4 w-4" /> : <Plus className="h-4 w-4" />}
+              </button>
+            )}
+            {savings > 10 && (
+              <span className="flex items-center gap-0.5 bg-primary/15 text-primary text-[10px] font-bold px-2 py-0.5 rounded-full">
+                <TrendingDown className="h-3 w-3" />
+                {savings}%
+              </span>
+            )}
+          </div>
         </div>
       </div>
     </div>

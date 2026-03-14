@@ -2,7 +2,7 @@ import { Globe, Shield, Trash2, Info, ChevronRight } from "lucide-react";
 import { useI18n } from "../hooks/useI18n";
 
 const SettingsTab = () => {
-  const { t, language, setLanguage } = useI18n();
+  const { language, setLanguage } = useI18n();
 
   const handleClearData = () => {
     if (confirm("Clear all local data including favorites?")) {

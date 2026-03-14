@@ -12,7 +12,7 @@ import { useGroceryData } from "./hooks/useGroceryData";
 import { useI18n } from "./hooks/useI18n";
 import { useProductName } from "./hooks/useProductName";
 import { useFavorites } from "./hooks/useFavorites";
-import type { Product } from "./data/groceryData";
+
 
 const App = () => {
   const [search, setSearch] = useState("");
@@ -118,6 +118,10 @@ const App = () => {
                   index={i}
                   isFavorite={isFavorite(product.id)}
                   onToggleFavorite={() => toggleFavorite(product.id)}
+                  isInBasket={basket.includes(product.id)}
+                  onAddToBasket={() => setBasket(prev => 
+                    prev.includes(product.id) ? prev.filter(id => id !== product.id) : [...prev, product.id]
+                  )}
                 />
               ))}
               {filtered.length === 0 && (
@@ -128,6 +132,42 @@ const App = () => {
               )}
             </div>
           </>
+        )}
+
+        {activeTab === "favorites" && (
+          <div className="space-y-5 animate-fade-in-up">
+            <div className="px-1">
+              <h2 className="text-xl font-display font-bold text-white">Your Favorites</h2>
+              <p className="text-xs text-muted-foreground">{filtered.length} items saved</p>
+            </div>
+            
+            <div className="grid grid-cols-1 gap-3">
+              {filtered.map((product, i) => (
+                <ProductCard
+                  key={product.id}
+                  product={product}
+                  index={i}
+                  isFavorite={true}
+                  onToggleFavorite={() => toggleFavorite(product.id)}
+                  isInBasket={basket.includes(product.id)}
+                  onAddToBasket={() => setBasket(prev => 
+                    prev.includes(product.id) ? prev.filter(id => id !== product.id) : [...prev, product.id]
+                  )}
+                />
+              ))}
+              {filtered.length === 0 && (
+                <div className="flex flex-col items-center justify-center py-20 text-center space-y-4">
+                  <div className="h-16 w-16 rounded-full bg-muted flex items-center justify-center">
+                    <Heart className="h-8 w-8 text-muted-foreground" />
+                  </div>
+                  <div>
+                    <h3 className="text-lg font-semibold text-white">No Favorites Yet</h3>
+                    <p className="text-sm text-muted-foreground">Tap the heart on any product to save it here.</p>
+                  </div>
+                </div>
+              )}
+            </div>
+          </div>
         )}
 
         {activeTab === "basket" && (

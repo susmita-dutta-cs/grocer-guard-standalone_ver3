@@ -44,19 +44,4 @@ export function useGroceryData() {
   };
 }
 
-function getCategoryEmoji(category: string): string {
-  const map: Record<string, string> = {
-    "Fruits & Vegetables": "🥦",
-    "Dairy & Eggs": "🥛",
-    "Meat & Seafood": "🥩",
-    "Bakery": "🍞",
-    "Pantry": "🥫",
-    "Beverages": "🥤",
-    "Snacks": "🍿",
-    "Frozen": "🧊",
-    "Household": "🧽",
-    "Personal Care": "🧴",
-    "Other": "🛒"
-  };
-  return map[category] || "🛒";
-}
+

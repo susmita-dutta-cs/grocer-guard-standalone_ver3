@@ -9,7 +9,6 @@ interface BasketTabProps {
 }
 
 const BasketTab = ({ items, onRemove }: BasketTabProps) => {
-  const { t } = useI18n();
   const { getProductName } = useProductName();
 
   const totalCost = items.reduce((sum, item) => sum + getLowestPrice(item).price, 0);
