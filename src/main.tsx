@@ -1,5 +1,7 @@
 import React from 'react'
 import ReactDOM from 'react-dom/client'
+import App from './App.tsx'
+import './index.css'
 import { I18nProvider } from './hooks/useI18n.tsx'
 
 ReactDOM.createRoot(document.getElementById('root')!).render(
