@@ -34,13 +34,30 @@ const translations = {
     "rec.personalized": "Speciaal voor Jou",
     "unit.each": "per stuk",
     "unit.per liter": "per liter",
+  },
+  fr: {
+    "app.tagline": "Économisez jusqu'à 40 % sur vos courses hebdomadaires",
+    "hero.title1": "Suivez les Prix.",
+    "hero.title2": "Saisissez les Offres.",
+    "hero.subtitle": "Économisez Plus.",
+    "search.placeholder": "Rechercher des produits...",
+    "nav.home": "Accueil",
+    "nav.favorites": "Favoris",
+    "nav.basket": "Panier",
+    "nav.settings": "Paramètres",
+    "nav.admin": "Admin",
+    "rec.bestValue": "Meilleures Affaires",
+    "rec.deals": "Offres & Tendances",
+    "rec.personalized": "Spécialement pour Vous",
+    "unit.each": "par pièce",
+    "unit.per liter": "par litre",
   }
 };
 
 export const categoryKeyMap: Record<string, string> = {
-  "All": "All",
-  "Fruits & Vegetables": "Groenten & Fruit",
-  "Dairy & Eggs": "Zuivel & Eieren",
+  "All": "Tout",
+  "Fruits & Vegetables": "Fruits & Légumes",
+  "Dairy & Eggs": "Œufs & Produits Laitiers",
 };
 
 const I18nContext = createContext({

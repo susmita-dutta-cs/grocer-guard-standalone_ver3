@@ -38,16 +38,22 @@ const BasketTab = ({
 
   const [brand, setBrand] = useState("All Brands");
 
-  // Extract unique brands for the current category
+  // Extract unique brands based on current category AND search
   const availableBrands = useMemo(() => {
     const brands = new Set<string>(["All Brands"]);
     allProducts.forEach(p => {
-      if ((category === "All" || p.category === category) && p.brand) {
+      const matchesCategory = category === "All" || p.category === category;
+      const localName = getProductName(p);
+      const matchesSearch = !search.trim() || 
+        localName.toLowerCase().includes(search.toLowerCase()) ||
+        p.brand?.toLowerCase().includes(search.toLowerCase());
+
+      if (matchesCategory && matchesSearch && p.brand) {
         brands.add(p.brand);
       }
     });
     return Array.from(brands).sort();
-  }, [allProducts, category]);
+  }, [allProducts, category, search, getProductName]);
 
   // Discoverable products (filtered, but not in basket)
   const discoveryProducts = useMemo(() => {

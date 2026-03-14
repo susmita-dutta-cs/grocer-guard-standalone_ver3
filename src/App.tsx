@@ -85,6 +85,11 @@ const App = () => {
     setUser(email);
   };
 
+  const handleLogout = () => {
+    localStorage.removeItem("shelfsmart_user");
+    setUser(null);
+  };
+
   if (!user) {
     return <AuthScreen onLogin={handleLogin} />;
   }
