@@ -139,7 +139,7 @@ async function scrapeStore(store) {
 
   log(`  Found ${pageImages.length} folder pages`);
   const allPromos = [];
-  const maxPages = Math.min(pageImages.length, 3); // Limit to 3 pages per store
+  const maxPages = pageImages.length; 
 
   for (let i = 0; i < maxPages; i++) {
     const img = pageImages[i];
