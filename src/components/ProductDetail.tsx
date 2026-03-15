@@ -1,7 +1,7 @@
-import { ArrowLeft, Heart, Plus, Check } from "lucide-react";
+import { ArrowLeft, Heart, Plus, Check, Filter, ChevronDown, TrendingDown, TrendingUp, Tag } from "lucide-react";
 import { Product, stores } from "../data/groceryData";
 import { useProductName } from "../hooks/useProductName";
-import { useMemo } from "react";
+import { useMemo, useState } from "react";
 
 const storeColorMap: Record<string, string> = {
   aldi: "bg-[#002d72]",
@@ -46,15 +46,26 @@ const ProductDetail = ({
   onAddToBasket
 }: ProductDetailProps) => {
   const { getProductName } = useProductName();
+  
+  // Filter & Sort State
+  const [storeFilter, setStoreFilter] = useState<string>("all");
+  const [sortBy, setSortBy] = useState<"asc" | "desc">("asc");
+  const [saleOnly, setSaleOnly] = useState(false);
 
   const matrixData: MatrixRow[] = useMemo(() => {
     const allVariants = [product, ...relatedProducts.filter((p) => p.id !== product.id)];
-    const rows: MatrixRow[] = [];
+    let rows: MatrixRow[] = [];
 
     for (const variant of allVariants) {
       for (const pp of variant.prices) {
         const store = stores.find((s) => s.id === pp.storeId);
         if (!store) continue;
+
+        // Apply Store Filter
+        if (storeFilter !== "all" && pp.storeId !== storeFilter) continue;
+        
+        // Apply Sale Filter
+        if (saleOnly && !pp.onSale) continue;
 
         rows.push({
           productId: variant.id,
@@ -71,13 +82,16 @@ const ProductDetail = ({
       }
     }
 
-    return rows.sort((a, b) => a.price - b.price);
-  }, [product, relatedProducts, getProductName]);
+    // Apply Sorting
+    return rows.sort((a, b) => {
+      return sortBy === "asc" ? a.price - b.price : b.price - a.price;
+    });
+  }, [product, relatedProducts, getProductName, storeFilter, sortBy, saleOnly]);
 
   return (
     <div className="space-y-6 animate-fade-in-up pb-20">
       {/* Header */}
-      <div className="flex items-center gap-4 bg-card/30 backdrop-blur-md p-4 rounded-3xl border border-white/5 sticky top-0 z-10">
+      <div className="flex items-center gap-4 bg-card/30 backdrop-blur-md p-4 rounded-3xl border border-white/5 sticky top-0 z-10 shadow-lg">
         <button
           onClick={onBack}
           className="h-10 w-10 rounded-2xl bg-muted/50 flex items-center justify-center hover:bg-muted transition-colors active:scale-95"
@@ -93,10 +107,56 @@ const ProductDetail = ({
               {getProductName(product)}
             </h2>
             <p className="text-[10px] text-muted-foreground uppercase tracking-widest font-bold mt-1">
-              {matrixData.length} VARIATIONS ACROSS STORES · {product.unit}
+              {matrixData.length} RESULTS · {product.unit}
             </p>
           </div>
         </div>
+      </div>
+
+      {/* Filter Bar */}
+      <div className="bg-card/40 backdrop-blur-md p-4 rounded-3xl border border-white/5 flex flex-wrap gap-3 items-center sticky top-24 z-10 shadow-md">
+        {/* Store Dropdown */}
+        <div className="relative flex-1 min-w-[120px]">
+          <select 
+            value={storeFilter}
+            onChange={(e) => setStoreFilter(e.target.value)}
+            className="w-full appearance-none bg-white/5 border border-white/10 rounded-xl px-4 py-2 text-[10px] font-black uppercase text-white tracking-widest outline-none focus:border-primary/50 transition-all cursor-pointer"
+          >
+            <option value="all">All Stores</option>
+            {stores.map(s => (
+              <option key={s.id} value={s.id}>{s.name}</option>
+            ))}
+          </select>
+          <div className="absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none">
+            <ChevronDown className="h-3 w-3 text-muted-foreground" />
+          </div>
+        </div>
+
+        {/* Sort Toggle */}
+        <button
+          onClick={() => setSortBy(prev => prev === "asc" ? "desc" : "asc")}
+          className="bg-white/5 border border-white/10 rounded-xl px-4 py-2 flex items-center gap-2 hover:bg-white/10 transition-all active:scale-95"
+        >
+          {sortBy === "asc" ? <TrendingUp className="h-3 w-3 text-primary" /> : <TrendingDown className="h-3 w-3 text-primary" />}
+          <span className="text-[10px] font-black uppercase text-white tracking-widest">
+            {sortBy === "asc" ? "Lowest first" : "Highest first"}
+          </span>
+        </button>
+
+        {/* Sale Toggle */}
+        <button
+          onClick={() => setSaleOnly(prev => !prev)}
+          className={`rounded-xl px-4 py-2 flex items-center gap-2 transition-all active:scale-95 border ${
+            saleOnly 
+              ? "bg-primary/20 border-primary text-primary" 
+              : "bg-white/5 border-white/10 text-muted-foreground hover:bg-white/10"
+          }`}
+        >
+          <Tag className={`h-3 w-3 ${saleOnly ? "fill-primary" : ""}`} />
+          <span className="text-[10px] font-black uppercase tracking-widest">
+            On Sale
+          </span>
+        </button>
       </div>
 
       {/* Comparison Table */}
@@ -104,7 +164,7 @@ const ProductDetail = ({
         <div className="overflow-x-auto">
           <table className="w-full text-left border-collapse">
             <thead>
-              <tr className="border-b border-white/5 bg-white/5 font-display">
+              <tr className="border-b border-white/5 bg-white/10 font-display">
                 <th className="px-5 py-4 text-[10px] font-black text-muted-foreground uppercase tracking-widest">Product</th>
                 <th className="px-5 py-4 text-[10px] font-black text-muted-foreground uppercase tracking-widest">Store</th>
                 <th className="px-5 py-4 text-[10px] font-black text-muted-foreground uppercase tracking-widest">Price</th>
@@ -112,14 +172,14 @@ const ProductDetail = ({
               </tr>
             </thead>
             <tbody className="divide-y divide-white/5">
-              {matrixData.map((row, i) => {
+              {matrixData.length > 0 ? matrixData.map((row, i) => {
                 const isFavorited = isFavorite(row.productId);
                 const inBasket = isInBasket(row.productId);
                 
                 return (
                   <tr 
                     key={`${row.productId}-${row.storeId}`} 
-                    className={`group transition-colors hover:bg-white/5 ${i === 0 ? "bg-primary/5" : ""}`}
+                    className={`group transition-colors hover:bg-white/5 ${i === 0 && sortBy === "asc" && !saleOnly ? "bg-primary/5 border-l-2 border-primary" : ""}`}
                   >
                     <td className="px-5 py-4 min-w-[200px]">
                       <div className="flex items-center gap-3">
@@ -175,7 +235,22 @@ const ProductDetail = ({
                     </td>
                   </tr>
                 );
-              })}
+              }) : (
+                <tr>
+                  <td colSpan={4} className="px-5 py-12 text-center">
+                    <div className="flex flex-col items-center gap-3">
+                      <Filter className="h-8 w-8 text-muted-foreground/30" />
+                      <p className="text-sm text-muted-foreground font-medium">No variations found with these filters.</p>
+                      <button 
+                        onClick={() => { setStoreFilter("all"); setSaleOnly(false); setSortBy("asc"); }}
+                        className="text-[10px] font-black uppercase text-primary tracking-widest hover:underline"
+                      >
+                        Reset Filters
+                      </button>
+                    </div>
+                  </td>
+                </tr>
+              )}
             </tbody>
           </table>
         </div>
