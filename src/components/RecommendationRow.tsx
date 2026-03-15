@@ -166,8 +166,6 @@ const RecommendationCard = ({
     </div>
   );
 };
-          );
-        })}
       </div>
     </div>
   );
