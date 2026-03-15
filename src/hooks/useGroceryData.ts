@@ -30,31 +30,33 @@ export function useGroceryData() {
     return map;
   }, [products]);
 
+  const stats = useMemo(() => {
+    if (products.length === 0) return { total: 0, avgSavings: 0, totalPotentialSavings: 0 };
+    
+    let totalSavings = 0;
+    let totalPotentialSavings = 0;
+    const total = products.length;
+
+    for (let i = 0; i < total; i++) {
+      const p = products[i];
+      totalSavings += getSavingsPercent(p);
+      
+      const prices = p.prices.map(pr => pr.price);
+      totalPotentialSavings += Math.max(...prices) - Math.min(...prices);
+    }
+    
+    const avgSavings = Math.round(totalSavings / total);
+
+    return { total, avgSavings, totalPotentialSavings };
+  }, [products]);
+
   return {
     products,
     productsByCategory,
     setProducts,
     stores: staticStores,
     isLoading,
-    getStats: () => {
-      if (products.length === 0) return { total: 0, avgSavings: 0, totalPotentialSavings: 0 };
-      
-      let totalSavings = 0;
-      let totalPotentialSavings = 0;
-      const total = products.length;
-
-      for (let i = 0; i < total; i++) {
-        const p = products[i];
-        totalSavings += getSavingsPercent(p);
-        
-        const prices = p.prices.map(pr => pr.price);
-        totalPotentialSavings += Math.max(...prices) - Math.min(...prices);
-      }
-      
-      const avgSavings = Math.round(totalSavings / total);
-
-      return { total, avgSavings, totalPotentialSavings };
-    }
+    stats
   };
 }
 

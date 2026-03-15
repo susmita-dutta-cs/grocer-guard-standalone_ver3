@@ -36,7 +36,7 @@ const App = () => {
     return () => clearTimeout(timer);
   }, [search]);
   
-  const { products, productsByCategory, setProducts, isLoading, getStats } = useGroceryData();
+  const { products, productsByCategory, setProducts, isLoading, stats } = useGroceryData();
   const [basket, setBasket] = useState<string[]>([]);
   const [basketSearch, setBasketSearch] = useState("");
   const [basketCategory, setBasketCategory] = useState("All");
@@ -44,7 +44,6 @@ const App = () => {
   const { getProductName } = useProductName();
   const { isFavorite, toggleFavorite, favoritesCount, favorites } = useFavorites();
   const { weeklyDeals, bestValue, personalized, trackView, getSmartBasket } = useRecommendations();
-  const stats = getStats();
 
   const filtered = useMemo(() => {
     let base = activeTab === "favorites" 

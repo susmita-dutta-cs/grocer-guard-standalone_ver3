@@ -10,7 +10,7 @@ const IMAGE_MAP: Record<string, string> = {
   "zucchini": "/assets/icons/zucchini.png",
   "courgettes": "/assets/icons/zucchini.png",
   "milk": "/assets/icons/milk.png",
-  "vollemelk": "/Users/susmita/grocery_saver/grocer-guard-standalone/public/assets/icons/milk.png",
+  "vollemelk": "/assets/icons/milk.png",
   "halfvolle melk": "/assets/icons/milk.png",
   "bread": "/assets/icons/bread.png",
   "tijgerbrood": "/assets/icons/bread.png",
@@ -35,7 +35,6 @@ const CATEGORY_MAP: Record<string, string> = {
 
 // Map of specific keywords to their best-fit premium icon
 const FALLBACK_ICON_MAP: Record<string, string> = {
-  "avocado": "/assets/icons/avocado.png",
   "zucchini": "/assets/icons/zucchini.png",
   "courgette": "/assets/icons/zucchini.png",
   "milk": "/assets/icons/milk.png",
@@ -50,10 +49,9 @@ const FALLBACK_ICON_MAP: Record<string, string> = {
   "meat": "/assets/icons/meat.png",
   "vlees": "/assets/icons/meat.png",
   "viande": "/assets/icons/meat.png",
-  "cheese": "/assets/icons/cheese.png",
-  "kaas": "/assets/icons/cheese.png",
-  "fromage": "/assets/icons/cheese.png",
-  "parmesan": "/assets/icons/parmesan.png",
+  "cheese": "/assets/icons/eggs.png", // Fallback to eggs/dairy icon
+  "kaas": "/assets/icons/eggs.png",
+  "fromage": "/assets/icons/eggs.png",
   "pantry": "/assets/icons/pantry.png",
   "beverage": "/assets/icons/beverages.png",
   "snack": "/assets/icons/snacks.png",
@@ -76,7 +74,7 @@ const FALLBACK_ICON_MAP: Record<string, string> = {
   "apple": "/assets/icons/apples.png",
   "appel": "/assets/icons/apples.png",
   "pomme": "/assets/icons/apples.png",
-  "banana": "/assets/icons/apples.png", // Or a banana icon if available
+  "banana": "/assets/icons/apples.png", 
   "banaan": "/assets/icons/apples.png",
   "banane": "/assets/icons/apples.png",
   "carrot": "/assets/icons/zucchini.png",
