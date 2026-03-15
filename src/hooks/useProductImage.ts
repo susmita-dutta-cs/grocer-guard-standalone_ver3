@@ -27,17 +27,26 @@ const CATEGORY_MAP: Record<string, string> = {
 };
 
 export const useProductImage = () => {
+  const isUrl = (source: string): boolean => {
+    return source.startsWith("http") || source.startsWith("blob");
+  };
+
   const getProductImage = (product: Product): string => {
+    // 1. If the product data already has a real URL (from scraping), use it!
+    if (isUrl(product.image)) {
+      return product.image;
+    }
+
     const nameLower = product.name.toLowerCase();
     
-    // 1. Try exact name mapping
+    // 2. Try exact name mapping for our premium icons
     for (const [key, path] of Object.entries(IMAGE_MAP)) {
       if (nameLower.includes(key)) {
         return path;
       }
     }
 
-    // 2. Try category mapping
+    // 3. Try category mapping for our premium icons
     if (CATEGORY_MAP[product.category]) {
       // Special logic for Dairy & Eggs
       if (product.category === "Dairy & Eggs" && nameLower.includes("milk")) {
@@ -46,12 +55,12 @@ export const useProductImage = () => {
       return CATEGORY_MAP[product.category];
     }
 
-    // 3. Fallback to the emoji stored in the data
+    // 4. Fallback to the emoji or whatever is stored in the data
     return product.image;
   };
 
   const isEmoji = (source: string): boolean => {
-    return !source.startsWith("/") && !source.startsWith("http");
+    return !source.startsWith("/") && !isUrl(source);
   };
 
   return { getProductImage, isEmoji };
