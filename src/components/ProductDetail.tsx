@@ -20,7 +20,8 @@ interface ProductDetailProps {
   onBack: () => void;
   isFavorite: (id: string) => boolean;
   onToggleFavorite: (id: string) => void;
-  isInBasket: (id: string) => boolean;
+  onAddToBasket: (id: string) => void;
+}
 
 type MatrixRow = {
   productId: string;
