@@ -2,6 +2,7 @@ import { stores, getLowestPrice } from "../data/groceryData";
 import { Sparkles, TrendingDown, Tag, Heart, Plus, Check } from "lucide-react";
 import { useI18n } from "../hooks/useI18n";
 import { useProductName } from "../hooks/useProductName";
+import { useProductImage } from "../hooks/useProductImage";
 import type { Recommendation } from "../hooks/useRecommendations";
 
 const reasonConfig: Record<string, { icon: any; titleKey: string; accent: string; bg: string }> = {
@@ -33,6 +34,7 @@ const RecommendationRow = ({
 }: RecommendationRowProps) => {
   const { t } = useI18n();
   const { getProductName } = useProductName();
+  const { getProductImage, isEmoji } = useProductImage();
   
   if (recommendations.length === 0) return null;
   const config = reasonConfig[reason] || { icon: Sparkles, titleKey: "rec.deals", accent: "text-primary", bg: "bg-primary/10" };
@@ -89,8 +91,16 @@ const RecommendationRow = ({
                 </button>
               </div>
 
-              <div className="h-12 w-12 rounded-2xl bg-primary/15 flex items-center justify-center text-3xl mb-3 shadow-inner transition-transform group-hover:scale-110">
-                {rec.product.image}
+              <div className="h-12 w-12 rounded-2xl bg-primary/15 flex items-center justify-center text-3xl mb-3 shadow-inner transition-transform group-hover:scale-110 overflow-hidden">
+                {isEmoji(getProductImage(rec.product)) ? (
+                  getProductImage(rec.product)
+                ) : (
+                  <img 
+                    src={getProductImage(rec.product)} 
+                    alt={getProductName(rec.product)} 
+                    className="w-full h-full object-contain p-1"
+                  />
+                )}
               </div>
               <p className="font-bold text-sm text-white leading-tight truncate pr-8">
                 {getProductName(rec.product)}

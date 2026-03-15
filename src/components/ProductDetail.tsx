@@ -1,6 +1,7 @@
 import { ArrowLeft, Heart, Plus, Check, Filter, ChevronDown, TrendingDown, TrendingUp, Tag } from "lucide-react";
 import { Product, stores } from "../data/groceryData";
 import { useProductName } from "../hooks/useProductName";
+import { useProductImage } from "../hooks/useProductImage";
 import { useMemo, useState } from "react";
 
 const storeColorMap: Record<string, string> = {
@@ -46,6 +47,8 @@ const ProductDetail = ({
   onAddToBasket
 }: ProductDetailProps) => {
   const { getProductName } = useProductName();
+  const { getProductImage, isEmoji } = useProductImage();
+  const headerImage = getProductImage(product);
   
   // Filter & Sort State
   const [storeFilter, setStoreFilter] = useState<string>("all");
@@ -69,7 +72,7 @@ const ProductDetail = ({
 
         rows.push({
           productId: variant.id,
-          image: variant.image,
+          image: getProductImage(variant),
           name: getProductName(variant),
           brand: variant.brand,
           unit: variant.unit,
@@ -99,8 +102,16 @@ const ProductDetail = ({
           <ArrowLeft className="h-5 w-5 text-foreground" />
         </button>
         <div className="flex items-center gap-3 flex-1 min-w-0">
-          <div className="h-12 w-12 rounded-2xl bg-primary/15 flex items-center justify-center text-3xl shrink-0 shadow-inner">
-            {product.image}
+          <div className="h-12 w-12 rounded-2xl bg-primary/15 flex items-center justify-center text-3xl shrink-0 shadow-inner overflow-hidden">
+            {isEmoji(headerImage) ? (
+              headerImage
+            ) : (
+              <img 
+                src={headerImage} 
+                alt={getProductName(product)} 
+                className="w-full h-full object-contain p-1"
+              />
+            )}
           </div>
           <div className="min-w-0">
             <h2 className="font-display font-bold text-xl text-white truncate leading-tight">
@@ -183,7 +194,17 @@ const ProductDetail = ({
                   >
                     <td className="px-5 py-4 min-w-[200px]">
                       <div className="flex items-center gap-3">
-                        <span className="text-2xl shrink-0 group-hover:scale-110 transition-transform">{row.image}</span>
+                        <div className="h-10 w-10 min-w-[40px] rounded-xl bg-white/5 flex items-center justify-center text-2xl shrink-0 group-hover:scale-110 transition-transform overflow-hidden shadow-sm">
+                          {isEmoji(row.image) ? (
+                            row.image
+                          ) : (
+                            <img 
+                              src={row.image} 
+                              alt={row.name} 
+                              className="w-full h-full object-contain p-1"
+                            />
+                          )}
+                        </div>
                         <div className="min-w-0">
                           <p className="text-xs font-bold text-white truncate leading-tight">{row.name}</p>
                           {row.brand && (

@@ -2,6 +2,7 @@ import { Product, stores, getLowestPrice, getSavingsPercent } from "../data/groc
 import { TrendingDown, Heart, Plus, Check } from "lucide-react";
 import { useI18n } from "../hooks/useI18n";
 import { useProductName } from "../hooks/useProductName";
+import { useProductImage } from "../hooks/useProductImage";
 
 interface ProductCardProps {
   product: Product;
@@ -16,6 +17,7 @@ interface ProductCardProps {
 const ProductCard = ({ product, index, onView, isFavorite, onToggleFavorite, isInBasket, onAddToBasket }: ProductCardProps) => {
   const { t } = useI18n();
   const { getProductName } = useProductName();
+  const { getProductImage, isEmoji } = useProductImage();
   const translatedName = getProductName(product);
   const translatedUnit = t(`unit.${product.unit}`) !== `unit.${product.unit}` ? t(`unit.${product.unit}`) : product.unit;
   const lowest = getLowestPrice(product);
@@ -34,8 +36,16 @@ const ProductCard = ({ product, index, onView, isFavorite, onToggleFavorite, isI
       <div className="absolute inset-0 bg-primary/0 group-active:bg-primary/5 transition-colors pointer-events-none" />
       
       <div className="flex items-center gap-4 relative z-10">
-        <div className="h-14 w-14 rounded-2xl bg-white/5 flex items-center justify-center text-3xl shrink-0 group-hover:scale-105 transition-transform duration-500 shadow-inner">
-          {product.image}
+        <div className="h-14 w-14 rounded-2xl bg-white/5 flex items-center justify-center text-3xl shrink-0 group-hover:scale-105 transition-transform duration-500 shadow-inner overflow-hidden">
+          {isEmoji(imageSource) ? (
+            imageSource
+          ) : (
+            <img 
+              src={imageSource} 
+              alt={translatedName} 
+              className="w-full h-full object-contain p-1.5"
+            />
+          )}
         </div>
         
         <div className="flex-1 min-w-0 flex flex-col gap-0.5">
