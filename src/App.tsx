@@ -192,7 +192,7 @@ const App = () => {
               </div>
             </section>
 
-            <SearchBar value={search} onChange={setSearch} />
+            <SearchBar value={search} onChange={setSearch} products={products} />
 
             {search.trim() ? (
               <div className="space-y-3">
@@ -314,6 +314,7 @@ const App = () => {
             <SearchBar 
               value={search} 
               onChange={setSearch} 
+              products={products}
               placeholder="Search & add products to favorites..." 
             />
 
