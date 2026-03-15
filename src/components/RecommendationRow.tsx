@@ -1,3 +1,4 @@
+import { useState, useEffect } from "react";
 import { stores, getLowestPrice } from "../data/groceryData";
 import { Sparkles, TrendingDown, Tag, Heart, Plus, Check } from "lucide-react";
 import { useI18n } from "../hooks/useI18n";
