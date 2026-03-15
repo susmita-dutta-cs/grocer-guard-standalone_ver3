@@ -35,7 +35,7 @@ const App = () => {
   const { t } = useI18n();
   const { getProductName } = useProductName();
   const { isFavorite, toggleFavorite, favoritesCount, favorites } = useFavorites();
-  const { bestValue, deals, personalized, trackView, getSmartBasket } = useRecommendations();
+  const { weeklyDeals, bestValue, deals, personalized, trackView, getSmartBasket } = useRecommendations();
   const stats = getStats();
 
   const filtered = useMemo(() => {
@@ -190,11 +190,14 @@ const App = () => {
                   </div>
                 </div>
 
-                <RecommendationRow
-                  recommendations={deals}
-                  reason="deal_trending"
-                  onView={(id) => handleProductSelect(products.find(p => p.id === id)!)}
-                />
+                {weeklyDeals.length > 0 && (
+                  <RecommendationRow
+                    title="🔥 Weekly Folder Deals"
+                    recommendations={weeklyDeals}
+                    reason="deal_trending"
+                    onView={(id) => handleProductSelect(products.find(p => p.id === id)!)}
+                  />
+                )}
 
                 <RecommendationRow
                   recommendations={bestValue}

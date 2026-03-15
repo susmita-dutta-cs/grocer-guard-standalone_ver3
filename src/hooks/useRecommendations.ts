@@ -154,6 +154,28 @@ function getPersonalized(allProducts: Product[], count = 4): Recommendation[] {
   return recommendations;
 }
 
+function getWeeklyDeals(allProducts: Product[], count = 6): Recommendation[] {
+  // Products with explicit promo details from the folder scraper
+  const promoProducts = allProducts.filter((p) =>
+    p.prices.some((pp) => pp.onSale && pp.promo_details)
+  );
+
+  return promoProducts
+    .map((p) => {
+      const bestPromo = p.prices.find((pp) => pp.onSale && pp.promo_details)!;
+      const store = stores.find((s) => s.id === bestPromo.storeId);
+      
+      return {
+        product: p,
+        reason: "deal_trending" as const, // Reusing existing reason for now or could add "weekly_promo"
+        label: `${store?.name || "Store"}: ${bestPromo.promo_details?.discount_type || "On Sale"}`,
+        score: getSavingsPercent(p) + 50, // High score to prioritize
+      };
+    })
+    .sort((a, b) => b.score - a.score)
+    .slice(0, count);
+}
+
 // --- Hook ---
 export function useRecommendations() {
   const { products: allProducts } = useGroceryData();
@@ -164,11 +186,13 @@ export function useRecommendations() {
     setHistoryVersion((v) => v + 1);
   }, []);
 
+  const weeklyDeals = useMemo(() => getWeeklyDeals(allProducts, 6), [allProducts]);
   const bestValue = useMemo(() => getBestValuePicks(allProducts, 4), [allProducts]);
   const deals = useMemo(() => getDealsAndTrending(allProducts, 4), [allProducts]);
   const personalized = useMemo(() => getPersonalized(allProducts, 4), [allProducts, historyVersion]);
 
   return {
+    weeklyDeals,
     bestValue,
     deals,
     personalized,

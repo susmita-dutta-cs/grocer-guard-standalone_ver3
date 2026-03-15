@@ -58,9 +58,16 @@ const ProductCard = ({ product, index, onView, isFavorite, onToggleFavorite, isI
             <span className="text-lg font-display font-black text-white">
               €{lowest.price.toFixed(2)}
             </span>
-            <span className="text-[10px] text-muted-foreground/60 font-medium">
-              at {lowestStore?.name} • {translatedUnit}
-            </span>
+            <div className="flex flex-col">
+              <span className="text-[10px] text-muted-foreground/60 font-medium">
+                at {lowestStore?.name} • {translatedUnit}
+              </span>
+              {lowest.promo_details?.discount_type && (
+                <span className="text-[9px] text-primary font-bold uppercase tracking-tight">
+                  {lowest.promo_details.discount_type}
+                </span>
+              )}
+            </div>
           </div>
         </div>
 

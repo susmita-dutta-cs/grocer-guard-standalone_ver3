@@ -14,9 +14,10 @@ interface RecommendationRowProps {
   recommendations: Recommendation[];
   reason: string;
   onView: (id: string) => void;
+  title?: string;
 }
 
-const RecommendationRow = ({ recommendations, reason, onView }: RecommendationRowProps) => {
+const RecommendationRow = ({ recommendations, reason, onView, title }: RecommendationRowProps) => {
   const { t } = useI18n();
   const { getProductName } = useProductName();
   
@@ -31,7 +32,9 @@ const RecommendationRow = ({ recommendations, reason, onView }: RecommendationRo
           <div className={`h-8 w-8 rounded-xl ${config.bg} flex items-center justify-center`}>
             <Icon className={`h-4 w-4 ${config.accent}`} />
           </div>
-          <h3 className="font-display font-bold text-white tracking-wide text-sm uppercase">{t(config.titleKey)}</h3>
+          <h3 className="font-display font-bold text-white tracking-wide text-sm uppercase">
+            {title || t(config.titleKey)}
+          </h3>
         </div>
       </div>
       
@@ -61,6 +64,11 @@ const RecommendationRow = ({ recommendations, reason, onView }: RecommendationRo
                   €{lowest.price.toFixed(2)}
                 </span>
                 <span className="text-[10px] text-muted-foreground font-black uppercase">at {store.name}</span>
+                {lowest.promo_details?.discount_type && (
+                  <span className="text-[9px] text-primary font-bold uppercase tracking-tight mt-1">
+                    {lowest.promo_details.discount_type}
+                  </span>
+                )}
               </div>
               <div className={`mt-3 inline-block text-[9px] font-black uppercase tracking-tight px-2.5 py-1 rounded-lg ${config.bg} ${config.accent}`}>
                 {rec.label}

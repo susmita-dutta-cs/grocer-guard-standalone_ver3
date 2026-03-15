@@ -8,6 +8,11 @@ export type ProductPrice = {
   storeId: string;
   price: number;
   onSale?: boolean;
+  promo_details?: {
+    discount_type?: string | null;
+    valid_until?: string | null;
+    original_product_name?: string | null;
+  };
 };
 
 export type Product = {
@@ -46,11 +51,11 @@ export const categories = [
   "Personal Care",
 ];
 
-export function getLowestPrice(product: Product): { storeId: string; price: number } {
+export function getLowestPrice(product: Product): ProductPrice {
   return product.prices.reduce((min, p) => (p.price < min.price ? p : min), product.prices[0]);
 }
 
-export function getHighestPrice(product: Product): { storeId: string; price: number } {
+export function getHighestPrice(product: Product): ProductPrice {
   return product.prices.reduce((max, p) => (p.price > max.price ? p : max), product.prices[0]);
 }
 
