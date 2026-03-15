@@ -181,9 +181,9 @@ function getWeeklyDeals(allProducts: Product[], count = 6): Recommendation[] {
       
       return {
         product: p,
-        reason: "deal_trending" as const, // Reusing existing reason for now or could add "weekly_promo"
-        label: `${store?.name || "Store"}: ${bestPromo.promo_details?.discount_type || "On Sale"}`,
-        score: getSavingsPercent(p) + 50, // High score to prioritize
+        reason: "deal_trending" as const,
+        label: `${p.category} • ${store?.name || "Store"}: ${bestPromo.promo_details?.discount_type || "On Sale"}`,
+        score: getSavingsPercent(p) + 50,
       };
     })
     .sort((a, b) => b.score - a.score)
