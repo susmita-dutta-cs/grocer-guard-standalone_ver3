@@ -168,15 +168,15 @@ function getPersonalized(
   return recommendations.sort((a, b) => b.score - a.score).slice(0, count);
 }
 
-function getWeeklyDeals(allProducts: Product[], count = 6): Recommendation[] {
+function getWeeklyDeals(allProducts: Product[], count = 6, storeId?: string): Recommendation[] {
   // Products with explicit promo details from the folder scraper
   const promoProducts = allProducts.filter((p) =>
-    p.prices.some((pp) => pp.onSale && pp.promo_details)
+    p.prices.some((pp) => pp.onSale && pp.promo_details && (!storeId || pp.storeId === storeId))
   );
 
   return promoProducts
     .map((p) => {
-      const bestPromo = p.prices.find((pp) => pp.onSale && pp.promo_details)!;
+      const bestPromo = p.prices.find((pp) => pp.onSale && pp.promo_details && (!storeId || pp.storeId === storeId))!;
       const store = stores.find((s) => s.id === bestPromo.storeId);
       
       return {
@@ -191,7 +191,7 @@ function getWeeklyDeals(allProducts: Product[], count = 6): Recommendation[] {
 }
 
 // --- Hook ---
-export function useRecommendations() {
+export function useRecommendations(promoStoreId?: string) {
   const { products: allProducts, productsByCategory } = useGroceryData();
   const [historyVersion, setHistoryVersion] = useState(0);
 
@@ -202,8 +202,8 @@ export function useRecommendations() {
 
   const weeklyDeals = useMemo(() => {
     if (allProducts.length === 0) return [];
-    return getWeeklyDeals(allProducts, 6);
-  }, [allProducts]);
+    return getWeeklyDeals(allProducts, 6, promoStoreId);
+  }, [allProducts, promoStoreId]);
 
   const bestValue = useMemo(() => {
     if (allProducts.length === 0) return [];

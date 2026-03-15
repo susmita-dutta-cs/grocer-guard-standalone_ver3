@@ -28,6 +28,7 @@ const App = () => {
   const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
   const [user, setUser] = useState<string | null>(() => localStorage.getItem("shelfsmart_user"));
   const [debouncedSearch, setDebouncedSearch] = useState("");
+  const [promoStoreId, setPromoStoreId] = useState<string | undefined>(undefined);
 
   useEffect(() => {
     const timer = setTimeout(() => {
@@ -43,7 +44,7 @@ const App = () => {
   const { t } = useI18n();
   const { getProductName } = useProductName();
   const { isFavorite, toggleFavorite, favoritesCount, favorites } = useFavorites();
-  const { weeklyDeals, bestValue, personalized, trackView, getSmartBasket } = useRecommendations();
+  const { weeklyDeals, bestValue, personalized, trackView, getSmartBasket } = useRecommendations(promoStoreId);
 
   const filtered = useMemo(() => {
     let base = activeTab === "favorites" 
@@ -227,21 +228,57 @@ const App = () => {
                     <p className="text-lg font-display font-black text-white leading-none">€{(stats.totalPotentialSavings || 0).toFixed(2)}</p>
                   </div>
                 </div>
-
-                {weeklyDeals.length > 0 && (
-                  <RecommendationRow
-                    title="🔥 Weekly Folder Deals"
-                    recommendations={weeklyDeals}
-                    reason="deal_trending"
-                    onView={(id) => handleProductSelect(products.find(p => p.id === id)!)}
-                    isFavorite={(id) => favorites.includes(id)}
-                    onToggleFavorite={(id) => toggleFavorite(id)}
-                    isInBasket={(id) => basket.includes(id)}
-                    onAddToBasket={(id) => setBasket(prev => 
-                      prev.includes(id) ? prev.filter(x => x !== id) : [...prev, id]
-                    )}
-                  />
-                )}
+    
+                <div className="pt-2">
+                  <div className="flex items-center justify-between mb-3 px-1">
+                    <h3 className="text-[10px] uppercase tracking-[0.2em] font-black text-muted-foreground/60">Weekly Store Folder</h3>
+                    <div className="flex gap-2 overflow-x-auto scrollbar-hide py-1">
+                      <button
+                        onClick={() => setPromoStoreId(undefined)}
+                        className={`px-3 py-1.5 rounded-xl text-[10px] font-bold uppercase tracking-tight transition-all border ${
+                          !promoStoreId 
+                            ? "bg-primary/20 border-primary/40 text-primary shadow-lg shadow-primary/10" 
+                            : "bg-white/5 border-white/5 text-muted-foreground hover:border-white/10"
+                        }`}
+                      >
+                        All Stores
+                      </button>
+                      {stores.map(store => (
+                        <button
+                          key={store.id}
+                          onClick={() => setPromoStoreId(store.id)}
+                          className={`px-3 py-1.5 rounded-xl text-[10px] font-bold uppercase tracking-tight transition-all border whitespace-nowrap ${
+                            promoStoreId === store.id
+                              ? "bg-primary/20 border-primary/40 text-primary shadow-lg shadow-primary/10" 
+                              : "bg-white/5 border-white/5 text-muted-foreground hover:border-white/10"
+                          }`}
+                        >
+                          {store.name}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+    
+                  {weeklyDeals.length > 0 ? (
+                    <RecommendationRow
+                      title="🔥 Weekly Folder Deals"
+                      recommendations={weeklyDeals}
+                      reason="deal_trending"
+                      onView={(id) => handleProductSelect(products.find(p => p.id === id)!)}
+                      isFavorite={(id) => favorites.includes(id)}
+                      onToggleFavorite={(id) => toggleFavorite(id)}
+                      isInBasket={(id) => basket.includes(id)}
+                      onAddToBasket={(id) => setBasket(prev => 
+                        prev.includes(id) ? prev.filter(x => x !== id) : [...prev, id]
+                      )}
+                    />
+                  ) : (
+                    <div className="bg-card/30 backdrop-blur-sm rounded-3xl border border-dashed border-white/10 p-8 text-center animate-fade-in">
+                      <Sparkles className="h-6 w-6 text-muted-foreground/30 mx-auto mb-2" />
+                      <p className="text-xs text-muted-foreground font-medium italic">No weekly deals active for this store right now.</p>
+                    </div>
+                  )}
+                </div>
 
                 <RecommendationRow
                   recommendations={bestValue}
