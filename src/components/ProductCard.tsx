@@ -1,3 +1,4 @@
+import { useState, useEffect } from "react";
 import { Product, stores, getLowestPrice, getSavingsPercent } from "../data/groceryData";
 import { TrendingDown, Heart, Plus, Check } from "lucide-react";
 import { useI18n } from "../hooks/useI18n";
@@ -18,6 +19,14 @@ const ProductCard = ({ product, index, onView, isFavorite, onToggleFavorite, isI
   const { t } = useI18n();
   const { getProductName } = useProductName();
   const { getProductImage, isEmoji } = useProductImage();
+  const initialSource = getProductImage(product);
+  const [imgSrc, setImgSrc] = useState(initialSource);
+
+  // Update image if product changes
+  useEffect(() => {
+    setImgSrc(getProductImage(product));
+  }, [product, getProductImage]);
+
   const translatedName = getProductName(product);
   const translatedUnit = t(`unit.${product.unit}`) !== `unit.${product.unit}` ? t(`unit.${product.unit}`) : product.unit;
   const lowest = getLowestPrice(product);
@@ -37,13 +46,18 @@ const ProductCard = ({ product, index, onView, isFavorite, onToggleFavorite, isI
       
       <div className="flex items-center gap-4 relative z-10">
         <div className="h-14 w-14 rounded-2xl bg-white/5 flex items-center justify-center text-3xl shrink-0 group-hover:scale-105 transition-transform duration-500 shadow-inner overflow-hidden">
-          {isEmoji(imageSource) ? (
-            imageSource
+          {isEmoji(imgSrc) ? (
+            imgSrc
           ) : (
             <img 
-              src={imageSource} 
+              src={imgSrc} 
               alt={translatedName} 
               className="w-full h-full object-contain p-1.5"
+              onError={() => {
+                // Fallback to local icon if URL fails
+                const localFallback = initialSource.startsWith("http") ? "/assets/icons/zucchini.png" : initialSource; // Simplified for demo, ideally we'd map category again
+                setImgSrc(localFallback);
+              }}
             />
           )}
         </div>

@@ -2,7 +2,7 @@ import { ArrowLeft, Heart, Plus, Check, Filter, ChevronDown, TrendingDown, Trend
 import { Product, stores } from "../data/groceryData";
 import { useProductName } from "../hooks/useProductName";
 import { useProductImage } from "../hooks/useProductImage";
-import { useMemo, useState } from "react";
+import { useMemo, useState, useEffect } from "react";
 
 const storeColorMap: Record<string, string> = {
   aldi: "bg-[#002d72]",
@@ -46,9 +46,13 @@ const ProductDetail = ({
   isInBasket,
   onAddToBasket
 }: ProductDetailProps) => {
-  const { getProductName } = useProductName();
   const { getProductImage, isEmoji } = useProductImage();
-  const headerImage = getProductImage(product);
+  const initialHeaderImage = getProductImage(product);
+  const [headerImg, setHeaderImg] = useState(initialHeaderImage);
+
+  useEffect(() => {
+    setHeaderImg(getProductImage(product));
+  }, [product, getProductImage]);
   
   // Filter & Sort State
   const [storeFilter, setStoreFilter] = useState<string>("all");
@@ -103,13 +107,14 @@ const ProductDetail = ({
         </button>
         <div className="flex items-center gap-3 flex-1 min-w-0">
           <div className="h-12 w-12 rounded-2xl bg-primary/15 flex items-center justify-center text-3xl shrink-0 shadow-inner overflow-hidden">
-            {isEmoji(headerImage) ? (
-              headerImage
+            {isEmoji(headerImg) ? (
+              headerImg
             ) : (
               <img 
-                src={headerImage} 
+                src={headerImg} 
                 alt={getProductName(product)} 
                 className="w-full h-full object-contain p-1"
+                onError={() => setHeaderImg("/assets/icons/zucchini.png")}
               />
             )}
           </div>
