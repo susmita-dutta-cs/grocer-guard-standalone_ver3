@@ -123,13 +123,18 @@ function getDealsAndTrending(allProducts: Product[], count = 4): Recommendation[
     .slice(0, count);
 }
 
-function getPersonalized(allProducts: Product[], count = 4): Recommendation[] {
-  const history = getViewHistory();
-  if (history.length === 0) return [];
+function getPersonalized(
+  allProducts: Product[],
+  productsByCategory: Record<string, Product[]>, 
+  viewHistory: string[], 
+  count = 4
+): Recommendation[] {
+  if (viewHistory.length === 0) return [];
 
+  // 1. Get cat frequencies from history (small array)
   const catFreq: Record<string, number> = {};
-  history.forEach((id) => {
-    const p = allProducts.find((pr) => pr.id === id);
+  viewHistory.slice(0, 10).forEach((id) => {
+    const p = allProducts.find((pr) => pr.id === id); // This is still a bit slow if history is long, but we slice it
     if (p) {
       catFreq[p.category] = (catFreq[p.category] || 0) + 1;
     }
@@ -137,21 +142,30 @@ function getPersonalized(allProducts: Product[], count = 4): Recommendation[] {
 
   const topCats = Object.entries(catFreq)
     .sort(([, a], [, b]) => b - a)
-    .map(([cat]) => cat);
+    .map(([cat]) => cat)
+    .slice(0, 3); // Top 3 categories
 
-  const recentSet = new Set(history.slice(0, 5));
-  const recommendations = allProducts
-    .filter((p) => topCats.includes(p.category) && !recentSet.has(p.id))
-    .map((p) => ({
-      product: p,
-      reason: "personalized" as const,
-      label: p.category,
-      score: (topCats.indexOf(p.category) + 1) * -1 + getSavingsPercent(p),
-    }))
-    .sort((a, b) => b.score - a.score)
-    .slice(0, count);
+  const recentSet = new Set(viewHistory.slice(0, 20));
+  const recommendations: Recommendation[] = [];
 
-  return recommendations;
+  // 2. Only search within top categories
+  topCats.forEach((cat, index) => {
+    const catProducts = productsByCategory[cat] || [];
+    const bestInCat = catProducts
+      .filter(p => !recentSet.has(p.id))
+      .map(p => ({
+        product: p,
+        reason: "personalized" as const,
+        label: p.category,
+        score: (index + 1) * -1 + getSavingsPercent(p),
+      }))
+      .sort((a, b) => b.score - a.score)
+      .slice(0, Math.ceil(count / topCats.length));
+    
+    recommendations.push(...bestInCat);
+  });
+
+  return recommendations.sort((a, b) => b.score - a.score).slice(0, count);
 }
 
 function getWeeklyDeals(allProducts: Product[], count = 6): Recommendation[] {
@@ -178,7 +192,7 @@ function getWeeklyDeals(allProducts: Product[], count = 6): Recommendation[] {
 
 // --- Hook ---
 export function useRecommendations() {
-  const { products: allProducts } = useGroceryData();
+  const { products: allProducts, productsByCategory } = useGroceryData();
   const [historyVersion, setHistoryVersion] = useState(0);
 
   const trackView = useCallback((productId: string) => {
@@ -186,10 +200,25 @@ export function useRecommendations() {
     setHistoryVersion((v) => v + 1);
   }, []);
 
-  const weeklyDeals = useMemo(() => getWeeklyDeals(allProducts, 6), [allProducts]);
-  const bestValue = useMemo(() => getBestValuePicks(allProducts, 4), [allProducts]);
-  const deals = useMemo(() => getDealsAndTrending(allProducts, 4), [allProducts]);
-  const personalized = useMemo(() => getPersonalized(allProducts, 4), [allProducts, historyVersion]);
+  const weeklyDeals = useMemo(() => {
+    if (allProducts.length === 0) return [];
+    return getWeeklyDeals(allProducts, 6);
+  }, [allProducts]);
+
+  const bestValue = useMemo(() => {
+    if (allProducts.length === 0) return [];
+    return getBestValuePicks(allProducts, 4);
+  }, [allProducts]);
+
+  const deals = useMemo(() => {
+    if (allProducts.length === 0) return [];
+    return getDealsAndTrending(allProducts, 4);
+  }, [allProducts]);
+
+  const personalized = useMemo(() => {
+    if (allProducts.length === 0) return [];
+    return getPersonalized(allProducts, productsByCategory, getViewHistory(), 4);
+  }, [allProducts, productsByCategory, historyVersion]);
 
   return {
     weeklyDeals,
@@ -197,6 +226,6 @@ export function useRecommendations() {
     deals,
     personalized,
     trackView,
-    getSmartBasket: (ids: string[]) => getSmartBasket(allProducts, ids),
+    getSmartBasket: useCallback((ids: string[]) => getSmartBasket(allProducts, ids), [allProducts]),
   };
 }

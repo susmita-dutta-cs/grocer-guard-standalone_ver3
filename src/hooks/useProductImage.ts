@@ -10,7 +10,14 @@ const IMAGE_MAP: Record<string, string> = {
   "zucchini": "/assets/icons/zucchini.png",
   "courgettes": "/assets/icons/zucchini.png",
   "milk": "/assets/icons/milk.png",
+  "vollemelk": "/Users/susmita/grocery_saver/grocer-guard-standalone/public/assets/icons/milk.png",
+  "halfvolle melk": "/assets/icons/milk.png",
   "bread": "/assets/icons/bread.png",
+  "tijgerbrood": "/assets/icons/bread.png",
+  "witbrood": "/assets/icons/bread.png",
+  "bruinbrood": "/assets/icons/bread.png",
+  "eggs": "/assets/icons/eggs.png",
+  "eieren": "/assets/icons/eggs.png",
 };
 
 const CATEGORY_MAP: Record<string, string> = {
@@ -32,10 +39,20 @@ const FALLBACK_ICON_MAP: Record<string, string> = {
   "zucchini": "/assets/icons/zucchini.png",
   "courgette": "/assets/icons/zucchini.png",
   "milk": "/assets/icons/milk.png",
+  "melk": "/assets/icons/milk.png",
+  "lait": "/assets/icons/milk.png",
   "bread": "/assets/icons/bread.png",
+  "brood": "/assets/icons/bread.png",
+  "pain": "/assets/icons/bread.png",
   "egg": "/assets/icons/eggs.png",
+  "ei": "/assets/icons/eggs.png",
+  "oeuf": "/assets/icons/eggs.png",
   "meat": "/assets/icons/meat.png",
+  "vlees": "/assets/icons/meat.png",
+  "viande": "/assets/icons/meat.png",
   "cheese": "/assets/icons/cheese.png",
+  "kaas": "/assets/icons/cheese.png",
+  "fromage": "/assets/icons/cheese.png",
   "parmesan": "/assets/icons/parmesan.png",
   "pantry": "/assets/icons/pantry.png",
   "beverage": "/assets/icons/beverages.png",
@@ -43,6 +60,38 @@ const FALLBACK_ICON_MAP: Record<string, string> = {
   "frozen": "/assets/icons/frozen.png",
   "house": "/assets/icons/household.png",
   "care": "/assets/icons/personal_care.png",
+  "kip": "/assets/icons/meat.png",
+  "poulet": "/assets/icons/meat.png",
+  "chicken": "/assets/icons/meat.png",
+  "steak": "/assets/icons/meat.png",
+  "varkens": "/assets/icons/meat.png",
+  "porc": "/assets/icons/meat.png",
+  "vis": "/assets/icons/meat.png",
+  "poisson": "/assets/icons/meat.png",
+  "fish": "/assets/icons/meat.png",
+  "boter": "/assets/icons/milk.png",
+  "beurre": "/assets/icons/milk.png",
+  "butter": "/assets/icons/milk.png",
+  "yoghurt": "/assets/icons/milk.png",
+  "apple": "/assets/icons/apples.png",
+  "appel": "/assets/icons/apples.png",
+  "pomme": "/assets/icons/apples.png",
+  "banana": "/assets/icons/apples.png", // Or a banana icon if available
+  "banaan": "/assets/icons/apples.png",
+  "banane": "/assets/icons/apples.png",
+  "carrot": "/assets/icons/zucchini.png",
+  "wortel": "/assets/icons/zucchini.png",
+  "carotte": "/assets/icons/zucchini.png",
+  "bière": "/assets/icons/beverages.png",
+  "beer": "/assets/icons/beverages.png",
+  "bier": "/assets/icons/beverages.png",
+  "wine": "/assets/icons/beverages.png",
+  "wijn": "/assets/icons/beverages.png",
+  "vin": "/assets/icons/beverages.png",
+  "water": "/assets/icons/beverages.png",
+  "sap": "/assets/icons/beverages.png",
+  "juice": "/assets/icons/beverages.png",
+  "jus": "/assets/icons/beverages.png",
 };
 
 export const useProductImage = () => {
@@ -81,8 +130,8 @@ export const useProductImage = () => {
       return CATEGORY_MAP[product.category];
     }
 
-    // 4. Ultimate fallback to what was in the data (likely emoji)
-    return product.image;
+    // 4. Ultimate fallback to a generic pantry icon
+    return CATEGORY_MAP["Pantry"];
   };
 
   const isEmoji = (source: string): boolean => {

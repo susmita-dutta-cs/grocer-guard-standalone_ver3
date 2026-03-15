@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { Product, stores as staticStores, getSavingsPercent } from "../data/groceryData";
 
 export function useGroceryData() {
@@ -21,23 +21,37 @@ export function useGroceryData() {
     fetchData();
   }, []);
 
+  const productsByCategory = useMemo(() => {
+    const map: Record<string, Product[]> = {};
+    products.forEach(p => {
+      if (!map[p.category]) map[p.category] = [];
+      map[p.category].push(p);
+    });
+    return map;
+  }, [products]);
+
   return {
     products,
+    productsByCategory,
     setProducts,
     stores: staticStores,
     isLoading,
     getStats: () => {
       if (products.length === 0) return { total: 0, avgSavings: 0, totalPotentialSavings: 0 };
-      const total = products.length;
-      const savings = products.map(p => getSavingsPercent(p));
-      const avgSavings = Math.round(savings.reduce((a, b) => a + b, 0) / total);
       
-      // Calculate total potential savings (diff between high and low for a typical "basket")
-      const totalPotentialSavings = products.reduce((acc, p) => {
+      let totalSavings = 0;
+      let totalPotentialSavings = 0;
+      const total = products.length;
+
+      for (let i = 0; i < total; i++) {
+        const p = products[i];
+        totalSavings += getSavingsPercent(p);
+        
         const prices = p.prices.map(pr => pr.price);
-        const diff = Math.max(...prices) - Math.min(...prices);
-        return acc + diff;
-      }, 0);
+        totalPotentialSavings += Math.max(...prices) - Math.min(...prices);
+      }
+      
+      const avgSavings = Math.round(totalSavings / total);
 
       return { total, avgSavings, totalPotentialSavings };
     }

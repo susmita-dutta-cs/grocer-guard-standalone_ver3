@@ -1,4 +1,4 @@
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import { ShoppingBasket, Sparkles, RefreshCcw, Heart } from "lucide-react";
 import heroImage from "./assets/hero-groceries.png";
 import SearchBar from "./components/SearchBar";
@@ -27,15 +27,23 @@ const App = () => {
   const [activeTab, setActiveTab] = useState<string>("home");
   const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
   const [user, setUser] = useState<string | null>(() => localStorage.getItem("shelfsmart_user"));
+  const [debouncedSearch, setDebouncedSearch] = useState("");
+
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setDebouncedSearch(search);
+    }, 300);
+    return () => clearTimeout(timer);
+  }, [search]);
   
-  const { products, setProducts, isLoading, getStats } = useGroceryData();
+  const { products, productsByCategory, setProducts, isLoading, getStats } = useGroceryData();
   const [basket, setBasket] = useState<string[]>([]);
   const [basketSearch, setBasketSearch] = useState("");
   const [basketCategory, setBasketCategory] = useState("All");
   const { t } = useI18n();
   const { getProductName } = useProductName();
   const { isFavorite, toggleFavorite, favoritesCount, favorites } = useFavorites();
-  const { weeklyDeals, bestValue, deals, personalized, trackView, getSmartBasket } = useRecommendations();
+  const { weeklyDeals, bestValue, personalized, trackView, getSmartBasket } = useRecommendations();
   const stats = getStats();
 
   const filtered = useMemo(() => {
@@ -47,20 +55,34 @@ const App = () => {
       base = base.filter(p => p.prices.some(pr => selectedStores.includes(pr.storeId)));
     }
 
+    const searchLower = debouncedSearch.toLowerCase();
+    const isSearching = searchLower.trim().length > 0;
+
     return base.filter((p) => {
-      const localName = getProductName(p);
-      const matchesSearch = localName.toLowerCase().includes(search.toLowerCase()) ||
-        p.name.toLowerCase().includes(search.toLowerCase()) ||
-        (p.brand && p.brand.toLowerCase().includes(search.toLowerCase()));
+      if (!isSearching && category === "All") return true;
+      
       const matchesCategory = category === "All" || p.category === category;
-      return matchesSearch && matchesCategory;
+      if (!matchesCategory) return false;
+      
+      if (!isSearching) return true;
+
+      const localName = getProductName(p);
+      return localName.toLowerCase().includes(searchLower) ||
+        p.name.toLowerCase().includes(searchLower) ||
+        (p.brand && p.brand.toLowerCase().includes(searchLower));
     });
-  }, [search, category, products, getProductName, activeTab, favorites, selectedStores]);
+  }, [debouncedSearch, category, products, getProductName, activeTab, favorites, selectedStores]);
 
   const storeCounts = useMemo(() => {
     const counts: Record<string, number> = {};
-    stores.forEach(s => {
-      counts[s.id] = products.filter(p => p.prices.some(pr => pr.storeId === s.id)).length;
+    stores.forEach(s => counts[s.id] = 0);
+    
+    products.forEach(p => {
+      p.prices.forEach(pr => {
+        if (counts[pr.storeId] !== undefined) {
+          counts[pr.storeId]++;
+        }
+      });
     });
     return counts;
   }, [products]);
@@ -89,23 +111,19 @@ const App = () => {
     };
 
     const keyword = getSearchKeyword(selectedProduct.name);
+    const categoryProducts = (productsByCategory as any)[selectedProduct.category] || [];
     
-    return products.filter(p => 
+    return categoryProducts.filter((p: Product) => 
       p.id !== selectedProduct.id && 
-      p.category === selectedProduct.category &&
       p.name.toLowerCase().includes(keyword)
-    ).slice(0, 15); // Show more variations if they truly match
-  }, [selectedProduct, products]);
+    ).slice(0, 15);
+  }, [selectedProduct, productsByCategory]);
 
   const handleLogin = (email: string) => {
     localStorage.setItem("shelfsmart_user", email);
     setUser(email);
   };
 
-  const handleLogout = () => {
-    localStorage.removeItem("shelfsmart_user");
-    setUser(null);
-  };
 
   if (!user) {
     return <AuthScreen onLogin={handleLogin} />;
@@ -148,17 +166,17 @@ const App = () => {
       <main className="max-w-lg mx-auto px-4 py-6 space-y-6 relative z-10">
         {activeTab === "home" && (
           selectedProduct ? (
-            <ProductDetail
-              product={selectedProduct}
-              relatedProducts={relatedProducts}
-              onBack={() => setSelectedProduct(null)}
-              isFavorite={isFavorite}
-              onToggleFavorite={toggleFavorite}
-              isInBasket={(id) => basket.includes(id)}
-              onAddToBasket={(id) => setBasket(prev => 
-                prev.includes(id) ? prev.filter(x => x !== id) : [...prev, id]
-              )}
-            />
+              <ProductDetail
+                product={selectedProduct}
+                relatedProducts={relatedProducts}
+                onBack={() => setSelectedProduct(null)}
+                isFavorite={isFavorite}
+                onToggleFavorite={toggleFavorite}
+                isInBasket={(id: string) => basket.includes(id)}
+                onAddToBasket={(id: string) => setBasket((prev: string[]) => 
+                  prev.includes(id) ? prev.filter((x: string) => x !== id) : [...prev, id]
+                )}
+              />
           ) : (
           <>
             <section className="relative h-48 rounded-3xl overflow-hidden group shadow-2xl">
@@ -188,8 +206,8 @@ const App = () => {
                     isFavorite={isFavorite(product.id)}
                     onToggleFavorite={() => toggleFavorite(product.id)}
                     isInBasket={basket.includes(product.id)}
-                    onAddToBasket={() => setBasket(prev => 
-                      prev.includes(product.id) ? prev.filter(id => id !== product.id) : [...prev, product.id]
+                    onAddToBasket={() => setBasket((prev: string[]) => 
+                      prev.includes(product.id) ? prev.filter((id: string) => id !== product.id) : [...prev, product.id]
                     )}
                   />
                 ))}
@@ -232,9 +250,9 @@ const App = () => {
                   onView={(id) => handleProductSelect(products.find(p => p.id === id)!)}
                   isFavorite={(id) => favorites.includes(id)}
                   onToggleFavorite={(id) => toggleFavorite(id)}
-                  isInBasket={(id) => basket.includes(id)}
-                  onAddToBasket={(id) => setBasket(prev => 
-                    prev.includes(id) ? prev.filter(x => x !== id) : [...prev, id]
+                  isInBasket={(id: string) => basket.includes(id)}
+                  onAddToBasket={(id: string) => setBasket((prev: string[]) => 
+                    prev.includes(id) ? prev.filter((x: string) => x !== id) : [...prev, id]
                   )}
                 />
 
@@ -268,8 +286,8 @@ const App = () => {
                       isFavorite={isFavorite(product.id)}
                       onToggleFavorite={() => toggleFavorite(product.id)}
                       isInBasket={basket.includes(product.id)}
-                      onAddToBasket={() => setBasket(prev => 
-                        prev.includes(product.id) ? prev.filter(id => id !== product.id) : [...prev, product.id]
+                      onAddToBasket={() => setBasket((prev: string[]) => 
+                        prev.includes(product.id) ? prev.filter((id: string) => id !== product.id) : [...prev, product.id]
                       )}
                     />
                   ))}
@@ -341,8 +359,8 @@ const App = () => {
                   isFavorite={favorites.includes(product.id)}
                   onToggleFavorite={() => toggleFavorite(product.id)}
                   isInBasket={basket.includes(product.id)}
-                  onAddToBasket={() => setBasket(prev => 
-                    prev.includes(product.id) ? prev.filter(id => id !== product.id) : [...prev, product.id]
+                  onAddToBasket={() => setBasket((prev: string[]) => 
+                    prev.includes(product.id) ? prev.filter((id: string) => id !== product.id) : [...prev, product.id]
                   )}
                 />
               ))}
@@ -374,9 +392,9 @@ const App = () => {
 
         {activeTab === "basket" && (
           <BasketTab 
-            items={products.filter(p => basket.includes(p.id))} 
-            onRemove={(id) => setBasket(prev => prev.filter(x => x !== id))}
-            onAdd={(id) => setBasket(prev => [...prev, id])}
+            items={products.filter((p: Product) => basket.includes(p.id))} 
+            onRemove={(id: string) => setBasket((prev: string[]) => prev.filter((x: string) => x !== id))}
+            onAdd={(id: string) => setBasket((prev: string[]) => [...prev, id])}
             itemsByStore={getSmartBasket(basket)}
             allProducts={products}
             search={basketSearch}
