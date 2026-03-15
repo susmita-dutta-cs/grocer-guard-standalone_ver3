@@ -28,7 +28,7 @@ const CATEGORY_MAP: Record<string, string> = {
 
 // Map of specific keywords to their best-fit premium icon
 const FALLBACK_ICON_MAP: Record<string, string> = {
-  "apple": "/assets/icons/apples.png",
+  "avocado": "/assets/icons/avocado.png",
   "zucchini": "/assets/icons/zucchini.png",
   "courgette": "/assets/icons/zucchini.png",
   "milk": "/assets/icons/milk.png",
@@ -36,6 +36,7 @@ const FALLBACK_ICON_MAP: Record<string, string> = {
   "egg": "/assets/icons/eggs.png",
   "meat": "/assets/icons/meat.png",
   "cheese": "/assets/icons/cheese.png",
+  "parmesan": "/assets/icons/parmesan.png",
   "pantry": "/assets/icons/pantry.png",
   "beverage": "/assets/icons/beverages.png",
   "snack": "/assets/icons/snacks.png",

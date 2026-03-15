@@ -21,8 +21,6 @@ interface ProductDetailProps {
   isFavorite: (id: string) => boolean;
   onToggleFavorite: (id: string) => void;
   isInBasket: (id: string) => boolean;
-  onAddToBasket: (id: string) => void;
-}
 
 type MatrixRow = {
   productId: string;
@@ -46,6 +44,7 @@ const ProductDetail = ({
   isInBasket,
   onAddToBasket
 }: ProductDetailProps) => {
+  const { getProductName } = useProductName();
   const { getProductImage, getFallbackIcon, isEmoji } = useProductImage();
   const initialHeaderImage = getProductImage(product);
   const [headerImg, setHeaderImg] = useState(initialHeaderImage);
