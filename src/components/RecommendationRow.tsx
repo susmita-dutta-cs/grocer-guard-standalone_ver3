@@ -166,9 +166,5 @@ const RecommendationCard = ({
     </div>
   );
 };
-      </div>
-    </div>
-  );
-};
 
 export default RecommendationRow;
