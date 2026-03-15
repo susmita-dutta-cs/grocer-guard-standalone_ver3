@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, memo } from "react";
 import { Product, stores, getLowestPrice, getSavingsPercent } from "../data/groceryData";
 import { TrendingDown, Heart, Plus, Check } from "lucide-react";
 import { useI18n } from "../hooks/useI18n";
@@ -15,10 +15,10 @@ interface ProductCardProps {
   onAddToBasket?: () => void;
 }
 
-const ProductCard = ({ product, index, onView, isFavorite, onToggleFavorite, isInBasket, onAddToBasket }: ProductCardProps) => {
+const ProductCard = memo(({ product, index, onView, isFavorite, onToggleFavorite, isInBasket, onAddToBasket }: ProductCardProps) => {
   const { t } = useI18n();
   const { getProductName } = useProductName();
-  const { getProductImage, isEmoji } = useProductImage();
+  const { getProductImage, getFallbackIcon, isEmoji } = useProductImage();
   const initialSource = getProductImage(product);
   const [imgSrc, setImgSrc] = useState(initialSource);
 
@@ -53,10 +53,11 @@ const ProductCard = ({ product, index, onView, isFavorite, onToggleFavorite, isI
               src={imgSrc} 
               alt={translatedName} 
               className="w-full h-full object-contain p-1.5"
+              loading="lazy"
+              decoding="async"
               onError={() => {
-                // Fallback to local icon if URL fails
-                const localFallback = initialSource.startsWith("http") ? "/assets/icons/zucchini.png" : initialSource; // Simplified for demo, ideally we'd map category again
-                setImgSrc(localFallback);
+                // FALLBACK FIX: Use the specific fallback icon for this item
+                setImgSrc(getFallbackIcon(product));
               }}
             />
           )}
@@ -132,6 +133,6 @@ const ProductCard = ({ product, index, onView, isFavorite, onToggleFavorite, isI
       </div>
     </div>
   );
-};
+});
 
 export default ProductCard;

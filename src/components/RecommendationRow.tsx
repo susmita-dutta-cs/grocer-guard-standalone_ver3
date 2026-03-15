@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, memo, useCallback } from "react";
 import { stores, getLowestPrice } from "../data/groceryData";
 import { Sparkles, TrendingDown, Tag, Heart, Plus, Check } from "lucide-react";
 import { useI18n } from "../hooks/useI18n";
@@ -35,7 +35,11 @@ const RecommendationRow = ({
 }: RecommendationRowProps) => {
   const { t } = useI18n();
   const { getProductName } = useProductName();
-  const { getProductImage, isEmoji } = useProductImage();
+  const { getProductImage, getFallbackIcon, isEmoji } = useProductImage();
+
+  const handleView = useCallback((id: string) => onView(id), [onView]);
+  const handleFavorite = useCallback((id: string) => onToggleFavorite(id), [onToggleFavorite]);
+  const handleBasket = useCallback((id: string) => onAddToBasket(id), [onAddToBasket]);
   
   if (recommendations.length === 0) return null;
   const config = reasonConfig[reason] || { icon: Sparkles, titleKey: "rec.deals", accent: "text-primary", bg: "bg-primary/10" };
@@ -66,13 +70,14 @@ const RecommendationRow = ({
               key={rec.product.id}
               rec={rec}
               i={i}
-              onView={onView}
+              onView={handleView}
               favorited={favorited}
               inBasket={inBasket}
-              onToggleFavorite={onToggleFavorite}
-              onAddToBasket={onAddToBasket}
+              onToggleFavorite={handleFavorite}
+              onAddToBasket={handleBasket}
               config={config}
               getProductImage={getProductImage}
+              getFallbackIcon={getFallbackIcon}
               getProductName={getProductName}
               isEmoji={isEmoji}
             />
@@ -83,9 +88,9 @@ const RecommendationRow = ({
   );
 };
 
-const RecommendationCard = ({ 
+const RecommendationCard = memo(({ 
   rec, i, onView, favorited, inBasket, onToggleFavorite, onAddToBasket, 
-  config, getProductImage, getProductName, isEmoji 
+  config, getProductImage, getFallbackIcon, getProductName, isEmoji 
 }: any) => {
   const initialImg = getProductImage(rec.product);
   const [imgSrc, setImgSrc] = useState(initialImg);
@@ -135,9 +140,11 @@ const RecommendationCard = ({
             src={imgSrc} 
             alt={getProductName(rec.product)} 
             className="w-full h-full object-contain p-1"
+            loading="lazy"
+            decoding="async"
             onError={() => {
-              const localFallback = initialImg.startsWith("http") ? "/assets/icons/apples.png" : initialImg;
-              setImgSrc(localFallback);
+              // FALLBACK FIX: Use the specific fallback icon
+              setImgSrc(getFallbackIcon(rec.product));
             }}
           />
         )}
@@ -165,6 +172,6 @@ const RecommendationCard = ({
       </div>
     </div>
   );
-};
+});
 
 export default RecommendationRow;

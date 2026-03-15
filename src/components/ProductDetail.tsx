@@ -46,7 +46,7 @@ const ProductDetail = ({
   isInBasket,
   onAddToBasket
 }: ProductDetailProps) => {
-  const { getProductImage, isEmoji } = useProductImage();
+  const { getProductImage, getFallbackIcon, isEmoji } = useProductImage();
   const initialHeaderImage = getProductImage(product);
   const [headerImg, setHeaderImg] = useState(initialHeaderImage);
 
@@ -114,7 +114,9 @@ const ProductDetail = ({
                 src={headerImg} 
                 alt={getProductName(product)} 
                 className="w-full h-full object-contain p-1"
-                onError={() => setHeaderImg("/assets/icons/zucchini.png")}
+                loading="lazy"
+                decoding="async"
+                onError={() => setHeaderImg(getFallbackIcon(product))}
               />
             )}
           </div>
