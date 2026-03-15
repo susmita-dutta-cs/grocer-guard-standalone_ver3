@@ -1,5 +1,5 @@
 import { stores, getLowestPrice } from "../data/groceryData";
-import { Sparkles, TrendingDown, Tag, Heart } from "lucide-react";
+import { Sparkles, TrendingDown, Tag, Heart, Plus, Check } from "lucide-react";
 import { useI18n } from "../hooks/useI18n";
 import { useProductName } from "../hooks/useProductName";
 import type { Recommendation } from "../hooks/useRecommendations";
@@ -15,9 +15,22 @@ interface RecommendationRowProps {
   reason: string;
   onView: (id: string) => void;
   title?: string;
+  isFavorite: (id: string) => boolean;
+  onToggleFavorite: (id: string) => void;
+  isInBasket: (id: string) => boolean;
+  onAddToBasket: (id: string) => void;
 }
 
-const RecommendationRow = ({ recommendations, reason, onView, title }: RecommendationRowProps) => {
+const RecommendationRow = ({ 
+  recommendations, 
+  reason, 
+  onView, 
+  title,
+  isFavorite,
+  onToggleFavorite,
+  isInBasket,
+  onAddToBasket
+}: RecommendationRowProps) => {
   const { t } = useI18n();
   const { getProductName } = useProductName();
   
@@ -42,17 +55,44 @@ const RecommendationRow = ({ recommendations, reason, onView, title }: Recommend
         {recommendations.map((rec, i) => {
           const lowest = getLowestPrice(rec.product);
           const store = stores.find((s) => s.id === lowest.storeId)!;
+          const favorited = isFavorite(rec.product.id);
+          const inBasket = isInBasket(rec.product.id);
+
           return (
             <div
               key={rec.product.id}
               onClick={() => onView(rec.product.id)}
-              className="min-w-[170px] bg-card/40 backdrop-blur-md rounded-3xl border border-border/50 p-4 shadow-xl hover:border-primary/30 transition-all flex-shrink-0 group cursor-pointer active:scale-95"
+              className={`min-w-[170px] bg-card/40 backdrop-blur-md rounded-3xl border p-4 shadow-xl hover:border-primary/30 transition-all flex-shrink-0 group cursor-pointer active:scale-95 relative overflow-hidden ${
+                favorited ? "border-primary/20 bg-primary/5" : "border-border/50"
+              }`}
               style={{ animationDelay: `${i * 80}ms` }}
             >
+               {/* Quick Actions */}
+               <div className="absolute top-3 right-3 flex flex-col gap-2 z-20">
+                <button
+                  onClick={(e) => { e.stopPropagation(); onToggleFavorite(rec.product.id); }}
+                  className="p-1.5 rounded-lg bg-white/5 active:bg-white/10 transition-all active:scale-90"
+                >
+                  <Heart
+                    className={`h-3.5 w-3.5 transition-all ${favorited ? "fill-primary text-primary scale-110" : "text-muted-foreground/40"}`}
+                  />
+                </button>
+                <button
+                  onClick={(e) => { e.stopPropagation(); onAddToBasket(rec.product.id); }}
+                  className={`p-1.5 rounded-lg transition-all active:scale-75 ${
+                    inBasket 
+                      ? "bg-primary text-primary-foreground shadow-lg shadow-primary/20 scale-105" 
+                      : "bg-white/5 text-muted-foreground hover:bg-primary/20 hover:text-primary"
+                  }`}
+                >
+                  {inBasket ? <Check className="h-3.5 w-3.5 stroke-[3px]" /> : <Plus className="h-3.5 w-3.5 stroke-[3px]" />}
+                </button>
+              </div>
+
               <div className="h-12 w-12 rounded-2xl bg-primary/15 flex items-center justify-center text-3xl mb-3 shadow-inner transition-transform group-hover:scale-110">
                 {rec.product.image}
               </div>
-              <p className="font-bold text-sm text-white leading-tight truncate">
+              <p className="font-bold text-sm text-white leading-tight truncate pr-8">
                 {getProductName(rec.product)}
               </p>
               {rec.product.brand && (

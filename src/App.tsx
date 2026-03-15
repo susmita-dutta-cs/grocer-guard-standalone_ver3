@@ -77,7 +77,24 @@ const App = () => {
 
   const relatedProducts = useMemo(() => {
     if (!selectedProduct) return [];
-    return products.filter(p => p.category === selectedProduct.category && p.id !== selectedProduct.id);
+    
+    // Helper to extract core name (e.g., "Zucchini" from "Courgettes (Zucchini)")
+    const getSearchKeyword = (name: string) => {
+      const parenthetical = name.match(/\((.*?)\)/);
+      if (parenthetical) return parenthetical[1].toLowerCase();
+      
+      const genericWords = ['bio', 'village', 'nature\'s', 'best', 'farm', 'fresh', 'green', 'garden', 'sun', 'ripe', 'ah', 'boni', 'everyday', '365', 'carrefour', 'aldi', 'lidl', 'colruyt', 'delhaize', 'jumbo', 'premium', 'organic', 'classic', 'original', 'value', 'economy', 'light', 'extra', 'small', 'medium', 'large', 'xl', 'family'];
+      const words = name.toLowerCase().replace(/[()]/g, '').split(' ').filter(w => w.length > 2 && !genericWords.includes(w));
+      return words[words.length - 1] || name.toLowerCase();
+    };
+
+    const keyword = getSearchKeyword(selectedProduct.name);
+    
+    return products.filter(p => 
+      p.id !== selectedProduct.id && 
+      p.category === selectedProduct.category &&
+      p.name.toLowerCase().includes(keyword)
+    ).slice(0, 15); // Show more variations if they truly match
   }, [selectedProduct, products]);
 
   const handleLogin = (email: string) => {
@@ -137,6 +154,10 @@ const App = () => {
               onBack={() => setSelectedProduct(null)}
               isFavorite={isFavorite}
               onToggleFavorite={toggleFavorite}
+              isInBasket={(id) => basket.includes(id)}
+              onAddToBasket={(id) => setBasket(prev => 
+                prev.includes(id) ? prev.filter(x => x !== id) : [...prev, id]
+              )}
             />
           ) : (
           <>
@@ -196,6 +217,12 @@ const App = () => {
                     recommendations={weeklyDeals}
                     reason="deal_trending"
                     onView={(id) => handleProductSelect(products.find(p => p.id === id)!)}
+                    isFavorite={(id) => favorites.includes(id)}
+                    onToggleFavorite={(id) => toggleFavorite(id)}
+                    isInBasket={(id) => basket.includes(id)}
+                    onAddToBasket={(id) => setBasket(prev => 
+                      prev.includes(id) ? prev.filter(x => x !== id) : [...prev, id]
+                    )}
                   />
                 )}
 
@@ -203,6 +230,12 @@ const App = () => {
                   recommendations={bestValue}
                   reason="best_value"
                   onView={(id) => handleProductSelect(products.find(p => p.id === id)!)}
+                  isFavorite={(id) => favorites.includes(id)}
+                  onToggleFavorite={(id) => toggleFavorite(id)}
+                  isInBasket={(id) => basket.includes(id)}
+                  onAddToBasket={(id) => setBasket(prev => 
+                    prev.includes(id) ? prev.filter(x => x !== id) : [...prev, id]
+                  )}
                 />
 
                 {personalized.length > 0 && (
@@ -210,6 +243,12 @@ const App = () => {
                     recommendations={personalized}
                     reason="personalized"
                     onView={(id) => handleProductSelect(products.find(p => p.id === id)!)}
+                    isFavorite={(id) => favorites.includes(id)}
+                    onToggleFavorite={(id) => toggleFavorite(id)}
+                    isInBasket={(id) => basket.includes(id)}
+                    onAddToBasket={(id) => setBasket(prev => 
+                      prev.includes(id) ? prev.filter(x => x !== id) : [...prev, id]
+                    )}
                   />
                 )}
 
